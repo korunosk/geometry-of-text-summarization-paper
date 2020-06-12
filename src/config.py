@@ -45,4 +45,4 @@ EMBEDDING_METHODS = [
     'BERT_sent'
 ]
 
-BASE_DATA_DIR = 'data'
+BASE_DATA_DIR = '/scratch/korunosk/data_paper'

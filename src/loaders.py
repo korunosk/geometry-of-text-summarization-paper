@@ -14,7 +14,10 @@ def load_embeddings(embedding_method, item_id):
     return vocab, embs
 
 def save_embeddings(embedding_method, item_id, vocab, embs):
-    fname = os.path.join(BASE_DATA_DIR, embedding_method, item_id)
+    directory = os.path.join(BASE_DATA_DIR, embedding_method)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    fname = os.path.join(directory, item_id)
     with open(fname + '.vocab', mode='w') as fp:
         fp.write(vocab)
     np.save(fname + '.npy', embs)

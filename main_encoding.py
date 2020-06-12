@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     print(embedding_method)
 
-    encode = encoders[args.embedding_method]()
+    encode = ENCODERS[args.embedding_method]()
 
     for dataset_id in DATASET_IDS:
         print(dataset_id)
