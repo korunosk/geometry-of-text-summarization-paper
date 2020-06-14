@@ -1,3 +1,4 @@
+import os
 import string
 from gensim.parsing.preprocessing import STOPWORDS
 
@@ -46,3 +47,11 @@ EMBEDDING_METHODS = [
 ]
 
 BASE_DATA_DIR = '/scratch/korunosk/data_paper'
+
+EMBEDDINGS_DIR = os.path.join(BASE_DATA_DIR, 'embeddings')
+
+DATA_DIR = os.path.join(BASE_DATA_DIR, 'data')
+
+MODELS_DIR = os.path.join(BASE_DATA_DIR, 'models')
+
+PLOTS_DIR = os.path.join(BASE_DATA_DIR, 'plots')
