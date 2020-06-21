@@ -5,7 +5,7 @@ CONFIG_MODELS = {
         'p': 2,
         'blur': .05,
         'scaling': .9,
-        'learning_rate': 1e-2,
+        'learning_rate': 1e-4,
         'batch_size': 100
     },
     'NNWAvgPRModel': {
