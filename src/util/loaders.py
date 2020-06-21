@@ -3,6 +3,8 @@ import json
 import orjson
 import numpy as np
 
+import torch
+
 from src.config import *
 
 
@@ -81,3 +83,18 @@ def save_train_data(dataset_id, item_id, item):
         os.makedirs(directory)
     fname = os.path.join(directory, item_id) + '.npy'
     np.save(fname, item)
+
+def load_model(embedding_method, dataset_id, model_id, Model, config):
+    fname = os.path.join(MODELS_DIR, embedding_method, dataset_id, model_id) + '.pt'
+    model = Model(config)
+    model.load_state_dict(torch.load(fname))
+    model.eval()
+    return model
+
+
+def save_model(embedding_method, dataset_id, model_id, model):
+    directory = os.path.join(MODELS_DIR, embedding_method, dataset_id)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    fname = os.path.join(directory, model_id) + '.pt'
+    torch.save(model.state_dict(), fname)

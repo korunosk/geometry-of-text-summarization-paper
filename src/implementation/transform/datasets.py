@@ -16,8 +16,6 @@ class TACDatasetRegression(Dataset):
         self.dataset_id = dataset_id
         self.data = data
 
-        # np.random.shuffle(data)
-    
     def __len__(self):
         return len(self.data)
 
@@ -38,8 +36,6 @@ class TACDatasetRegressionRouge(Dataset):
         self.embedding_method = embedding_method
         self.dataset_id = dataset_id
         self.data = data
-
-        # np.random.shuffle(data)
 
     def __len__(self):
         return len(self.data)
@@ -62,8 +58,6 @@ class TACDatasetClassification(Dataset):
         self.dataset_id = dataset_id
         self.data = data
 
-        # np.random.shuffle(data)
-    
     def __len__(self):
         return len(self.data)
     

@@ -9,16 +9,6 @@ from src.config import *
 
 class NNRougeRegModel(nn.Module):
 
-    @staticmethod
-    def load(fname, config):
-        model = NNRougeRegModel(config)
-        model.load_state_dict(torch.load(os.path.join(MODELS_DIR, fname)))
-        model.eval()
-        return model
-
-    def save(self, fname):
-        torch.save(self.state_dict(), os.path.join(MODELS_DIR, fname))
-
     def __init__(self, config):
         super(NNRougeRegModel, self).__init__()
         self.config = config
@@ -36,15 +26,6 @@ class NNRougeRegModel(nn.Module):
 
 
 class NNWAvgPRModel(nn.Module):
-
-    @staticmethod
-    def load(fname, config):
-        model = NNWAvgPRModel(config)
-        model.load_state_dict(torch.load(os.path.join(MODELS_DIR, fname)))
-        return model
-
-    def save(self, fname):
-        torch.save(self.state_dict(), os.path.join(MODELS_DIR, fname))
 
     def __init__(self, config):
         super(NNWAvgPRModel, self).__init__()
@@ -71,15 +52,6 @@ class NNWAvgPRModel(nn.Module):
 
 class LinSinkhornRegModel(nn.Module):
     
-    @staticmethod
-    def load(fname, config):
-        model = LinSinkhornRegModel(config)
-        model.load_state_dict(torch.load(os.path.join(MODELS_DIR, fname)))
-        return model
-
-    def save(self, fname):
-        torch.save(self.state_dict(), os.path.join(MODELS_DIR, fname))
-
     def __init__(self, config):
         super(LinSinkhornRegModel, self).__init__()
         self.config = config
@@ -97,15 +69,6 @@ class LinSinkhornRegModel(nn.Module):
 
 
 class LinSinkhornPRModel(nn.Module):
-
-    @staticmethod
-    def load(fname, config):
-        model = LinSinkhornPRModel(config)
-        model.load_state_dict(torch.load(os.path.join(MODELS_DIR, fname)))
-        return model
-
-    def save(self, fname):
-        torch.save(self.state_dict(), os.path.join(MODELS_DIR, fname))
 
     def __init__(self, config):
         super(LinSinkhornPRModel, self).__init__()
@@ -128,15 +91,6 @@ class LinSinkhornPRModel(nn.Module):
 
 class NNSinkhornPRModel(nn.Module):
 
-    @staticmethod
-    def load(fname, config):
-        model = NNSinkhornPRModel(config)
-        model.load_state_dict(torch.load(os.path.join(MODELS_DIR, fname)))
-        return model
-
-    def save(self, fname):
-        torch.save(self.state_dict(), os.path.join(MODELS_DIR, fname))
-    
     def __init__(self, config):
         super(NNSinkhornPRModel, self).__init__()
         self.config = config
