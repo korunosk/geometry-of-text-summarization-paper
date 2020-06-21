@@ -12,8 +12,8 @@ sns.set_style('ticks')
 
 from typing import Callable
 
-from src.baseline.redundancy import *
-from src.baseline.relevance import *
+from src.implementation.baseline.redundancy import *
+from src.implementation.baseline.relevance import *
 from src.util.helpers import *
 from src.util.visualization import *
 from src.config import *
