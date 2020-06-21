@@ -92,6 +92,22 @@ def make_data_regression(dataset_id: str) -> list:
     return data
 
 
+def make_data_regression_rouge(dataset_id: str) -> list:
+    data = []
+
+    rouge_scores = load_rouge_scores(dataset_id)
+
+    for topic_id in TOPIC_IDS[dataset_id]:
+        scores = rouge_scores[topic_id]
+        
+        n = len(scores)
+        for i in range(n):
+            y = scores[i]
+            data.append((topic_id, i, y))
+        
+    return data
+
+
 def make_data_classification(dataset_id: str) -> list:
     data = []
 

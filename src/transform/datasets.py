@@ -32,6 +32,29 @@ class TACDatasetRegression(Dataset):
         return (x, y)
 
 
+class TACDatasetRegressionRouge(Dataset):
+
+    def __init__(self, embedding_method, dataset_id, data):
+        self.embedding_method = embedding_method
+        self.dataset_id = dataset_id
+        self.data = data
+
+        np.random.shuffle(data)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        topic_id = self.data[idx][0]
+        
+        i = int(self.data[idx][1])
+        document_embs = load_embedded_item(self.embedding_method, self.dataset_id, topic_id, 'document_embs')
+        s = (document_embs[i],)
+        y = float(self.data[idx][2])
+        
+        return (s, y)
+
+
 class TACDatasetClassification(Dataset):
 
     def __init__(self, embedding_method, dataset_id, data):
