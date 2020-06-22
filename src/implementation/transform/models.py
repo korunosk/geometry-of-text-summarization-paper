@@ -50,6 +50,29 @@ class NNWAvgPRModel(nn.Module):
         return self.sigm(self.config['scaling_factor'] * (score1 - score2))
 
 
+class NNWAvgPRBatchModel(nn.Module):
+
+    def __init__(self, config):
+        super(NNWAvgPRBatchModel, self).__init__()
+        self.config = config
+        self.layer1 = nn.Linear(self.config['D_in'], self.config['D_out'])
+        self.layer2 = nn.Linear(self.config['H'], 1)
+        self.sigm = nn.Sigmoid()
+
+    def transform(self, x):
+        return F.relu(self.layer1(x))
+
+    def predict(self, d, s, m):
+        x = torch.cat((self.transform(d), self.transform(s)), axis=2)
+        z = self.layer2(x)
+        return torch.stack([ torch.sum(z[i].masked_select(m[i])) for i in range(z.shape[0]) ])
+
+    def forward(self, d, s1, s2, m1, m2):
+        score1 = self.predict(d, s1, m1)
+        score2 = self.predict(d, s2, m2)
+        return self.sigm(self.config['scaling_factor'] * (score1 - score2))
+
+
 class LinSinkhornRegModel(nn.Module):
     
     def __init__(self, config):

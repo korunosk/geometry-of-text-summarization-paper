@@ -113,6 +113,56 @@ def train_model_2(embedding_method, dataset_id):
     # plt.show()
 
 
+def train_model_2_batch(embedding_method, dataset_id):
+    config = CONFIG_MODELS['NNWAvgPRModel']
+
+    data = load_train_data(dataset_id, 'classification')
+    train, val = stratified_sampling(data)
+    print(len(train), len(val))
+
+    transform = transforms.Compose([ToTensor(), Expand(20)])
+    dataset = TACDatasetClassification(embedding_method, dataset_id, train, transform=transform)
+    data_loader = DataLoader(dataset, batch_size=config['batch_size'], shuffle=True)
+
+    model = NNWAvgPRBatchModel(config).to(device=cuda)
+
+    criterion = nn.BCELoss()
+    optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+
+    loss = []
+
+    for i, batch in enumerate(data_loader):
+        d, s1, s2, m1, m2, y = batch
+
+        y_hat = model(d.to(device=cuda),
+                    s1.to(device=cuda),
+                    s2.to(device=cuda),
+                    m1.to(device=cuda),
+                    m2.to(device=cuda))
+
+        y_hat = y_hat.squeeze()
+
+        L = criterion(y_hat, y.to(device=cuda))
+
+        L.backward()
+
+        optimizer.step()
+
+        optimizer.zero_grad()
+
+        loss.append(L.item())
+
+        if i % 100 == 0:
+            print(f'Train Loss: {loss[-1]:.4f}')
+
+    save_model(embedding_method, dataset_id, 'nn_wavg_pr_model', model)
+
+    # fig = plt.figure(figsize=(10,5))
+    # ax = fig.add_subplot(1,1,1)
+    # plot_loss(ax, loss)
+    # plt.show()
+
+
 def train_model_3(embedding_method, dataset_id):
     config = CONFIG_MODELS['LinSinkhornRegModel']
 
