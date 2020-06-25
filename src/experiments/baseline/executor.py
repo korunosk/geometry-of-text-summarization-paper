@@ -20,16 +20,18 @@ from src.config import *
 
 
 # models = [
-#     NNRougeRegModel.load('nn_rouge_reg_model.pt', CONFIG_MODELS['NNRougeRegModel']),
-#     NNSinkhornPRModel.load('nn_sinkhorn_pr_model.pt', CONFIG_MODELS['NNSinkhornPRModel']),
-#     NNWAvgPRModel.load('nn_wavg_pr_model.pt', CONFIG_MODELS['NNWAvgPRModel']),
+    # load_model(embedding_method, dataset_id, 'nn_rouge_reg_model', NNRougeRegModel, CONFIG_MODELS['NNRougeRegModel']).to(device=cuda),
+    # load_model(embedding_method, dataset_id, 'nn_wavg_pr_model', NNWAvgPRModel, CONFIG_MODELS['NNWAvgPRModel']).to(device=cuda),
+    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, CONFIG_MODELS['LinSinkhornRegModel']).to(device=cuda),
+    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, CONFIG_MODELS['LinSinkhornPRModel']).to(device=cuda),
+    # load_model(embedding_method, dataset_id, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, CONFIG_MODELS['NNSinkhornPRModel']).to(device=cuda),
 # ]
 
 
 # def transform(x):
-#     return models[2].transform(
-#         torch.tensor(x, dtype=torch.float)
-#     ).data.numpy().tolist()
+#     return models[0].transform(
+#         torch.tensor(x, dtype=torch.float).to(device=cuda)
+#     ).data.cpu().numpy().tolist()
 
 def transform(x):
     return x
@@ -37,10 +39,10 @@ def transform(x):
 
 class BaselineMetricsExperimentExecutor():
     
-    def __init__(self, dataset_id: str, embedding_method: str):
+    def __init__(self, embedding_method: str, dataset_id: str):
+        self.embedding_method = embedding_method
         self.dataset_id       = dataset_id
         self.topic_ids        = TOPIC_IDS[dataset_id]
-        self.embedding_method = embedding_method
         
         # Define list of experiments to execute.
         # Every entry needs to contain a label - the experiment name,

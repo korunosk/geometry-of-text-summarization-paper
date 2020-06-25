@@ -9,6 +9,8 @@ from torch.utils.tensorboard import SummaryWriter
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
+from src.config import *
+
 
 def make_pytorch_projector(log_dir, embeddings, global_step):
     ''' Exports PyTorch projector '''
