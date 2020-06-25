@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.model_selection import train_test_split
 from more_itertools import unique_everseen
 
@@ -11,7 +12,7 @@ def stratified_sampling(data, test_size=0.3):
 
 
 def leave_n_out(data, test_size=0.3):
-    topics = unique_everseen(data[:,0])
+    topics = pd.unique(data[:,0])
     n = int(test_size * len(topics))
     train_topics = topics[:-n]
     test_topics = topics[-n:]

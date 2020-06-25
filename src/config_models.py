@@ -6,7 +6,7 @@ CONFIG_MODELS = {
         'blur': .05,
         'scaling': .9,
         'learning_rate': 1e-4,
-        'batch_size': 100
+        'batch_size': 128
     },
     'NNWAvgPRModel': {
         'D_in': 768,
@@ -14,7 +14,7 @@ CONFIG_MODELS = {
         'H': 1536,
         'scaling_factor': 1,
         'learning_rate': 1e-4,
-        'batch_size': 100
+        'batch_size': 128
     },
     'LinSinkhornRegModel': {
         'D_in': 768,
@@ -23,7 +23,7 @@ CONFIG_MODELS = {
         'blur': .05,
         'scaling': .9,
         'learning_rate': 1e-2,
-        'batch_size': 100
+        'batch_size': 128
     },
     'LinSinkhornPRModel': {
         'D_in': 768,
@@ -33,7 +33,7 @@ CONFIG_MODELS = {
         'scaling': .9,
         'scaling_factor': 1,
         'learning_rate': 1e-2,
-        'batch_size': 100
+        'batch_size': 128
     },
     'NNSinkhornPRModel': {
         'D_in': 768,
@@ -43,6 +43,6 @@ CONFIG_MODELS = {
         'scaling': .9,
         'scaling_factor': 1,
         'learning_rate': 1e-2,
-        'batch_size': 100
+        'batch_size': 128
     }
 }

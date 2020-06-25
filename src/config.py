@@ -7,6 +7,8 @@ PUNCTUATION = list(string.punctuation)
 
 RANDOM_STATE = 42
 
+EPOCHS = 10
+
 DATASET_IDS = [
     'TAC2008',
     'TAC2009'
