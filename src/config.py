@@ -8,6 +8,7 @@ PUNCTUATION = list(string.punctuation)
 RANDOM_STATE = 42
 
 EPOCHS = 10
+BATCH_SIZE_VAL = 1000
 
 DATASET_IDS = [
     'TAC2008',

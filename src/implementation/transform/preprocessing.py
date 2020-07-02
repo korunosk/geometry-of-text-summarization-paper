@@ -13,9 +13,7 @@ def stratified_sampling(data, test_size=0.3):
 
 def leave_n_out(data, test_size=0.3):
     topics = pd.unique(data[:,0])
-    n = int(test_size * len(topics))
-    train_topics = topics[:-n]
-    test_topics = topics[-n:]
+    train_topics, test_topics = train_test_split(topics, test_size=test_size, random_state=RANDOM_STATE)
     train = data[np.isin(data[:,0], train_topics)]
     test = data[np.isin(data[:,0], test_topics)]
     return train, test

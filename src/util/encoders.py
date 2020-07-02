@@ -74,7 +74,7 @@ def make_encoder_bert_word():
         return valid_embs
     
     def encode_sentences(documents):
-        bc = BertClient(output_fmt='list')
+        bc = BertClient(port=5557, port_out=5558, output_fmt='list')
         n = np.cumsum([0] + list(map(len, documents)))
         document_embs_list, words_list = bc.encode(list(chain(*documents)), show_tokens=True)
         bc.close()
@@ -85,7 +85,7 @@ def make_encoder_bert_word():
 
 def make_encoder_bert_sent():
     def encode_sentences(documents):
-        bc = BertClient(output_fmt='list')
+        bc = BertClient(port=5557, port_out=5558, output_fmt='list')
         n = np.cumsum([0] + list(map(len, documents)))
         document_embs_list = bc.encode(list(chain(*documents)))
         bc.close()

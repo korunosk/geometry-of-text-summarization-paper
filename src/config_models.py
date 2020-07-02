@@ -14,7 +14,8 @@ CONFIG_MODELS = {
         'H': 1536,
         'scaling_factor': 1,
         'learning_rate': 1e-4,
-        'batch_size': 128
+        'batch_size': 128,
+        'epochs': 5
     },
     'LinSinkhornRegModel': {
         'D_in': 768,
