@@ -46,15 +46,19 @@ EMBEDDING_METHODS = [
     'GloVe',
     'fasttext',
     'BERT_word',
-    'BERT_sent'
+    'BERT_sent',
+    'BART_word'
 ]
 
-BASE_DATA_DIR = '/scratch/korunosk/data_paper'
+BASE_DATA_DIR   = '/scratch/korunosk/data_paper'
 
-EMBEDDINGS_DIR = os.path.join(BASE_DATA_DIR, 'embeddings')
+EMBEDDINGS_DIR  = os.path.join(BASE_DATA_DIR, 'embeddings')
+DATA_DIR        = os.path.join(BASE_DATA_DIR, 'data')
+MODELS_DIR      = os.path.join(BASE_DATA_DIR, 'models')
+PLOTS_DIR       = os.path.join(BASE_DATA_DIR, 'plots')
 
-DATA_DIR = os.path.join(BASE_DATA_DIR, 'data')
 
-MODELS_DIR = os.path.join(BASE_DATA_DIR, 'models')
+import torch
 
-PLOTS_DIR = os.path.join(BASE_DATA_DIR, 'plots')
+torch.manual_seed(RANDOM_STATE)
+device = torch.device('cuda:1')

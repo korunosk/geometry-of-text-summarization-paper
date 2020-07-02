@@ -20,17 +20,17 @@ from src.config import *
 
 
 # models = [
-    # load_model(embedding_method, dataset_id, 'nn_rouge_reg_model', NNRougeRegModel, CONFIG_MODELS['NNRougeRegModel']).to(device=cuda),
-    # load_model(embedding_method, dataset_id, 'nn_wavg_pr_model', NNWAvgPRModel, CONFIG_MODELS['NNWAvgPRModel']).to(device=cuda),
-    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, CONFIG_MODELS['LinSinkhornRegModel']).to(device=cuda),
-    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, CONFIG_MODELS['LinSinkhornPRModel']).to(device=cuda),
-    # load_model(embedding_method, dataset_id, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, CONFIG_MODELS['NNSinkhornPRModel']).to(device=cuda),
+    # load_model(embedding_method, dataset_id, 'nn_rouge_reg_model', NNRougeRegModel, CONFIG_MODELS['NNRougeRegModel']).to(device=device),
+    # load_model(embedding_method, dataset_id, 'nn_wavg_pr_model', NNWAvgPRModel, CONFIG_MODELS['NNWAvgPRModel']).to(device=device),
+    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, CONFIG_MODELS['LinSinkhornRegModel']).to(device=device),
+    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, CONFIG_MODELS['LinSinkhornPRModel']).to(device=device),
+    # load_model(embedding_method, dataset_id, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, CONFIG_MODELS['NNSinkhornPRModel']).to(device=device),
 # ]
 
 
 # def transform(x):
 #     return models[0].transform(
-#         torch.tensor(x, dtype=torch.float).to(device=cuda)
+#         torch.tensor(x, dtype=torch.float).to(device=device)
 #     ).data.cpu().numpy().tolist()
 
 def transform(x):
@@ -130,16 +130,16 @@ class BaselineMetricsExperimentExecutor():
 
         return ray.get(scores)
     
-    # def __generate_plots(self):
-    #     fig = plt.figure(figsize=(17.5,10))
-    #     # Redundancy
-    #     ax1 = fig.add_subplot(2,1,1)
-    #     plot_corr_coeff(ax1, self.topic_ids, self.experiments[:3])
-    #     ax1.set_xlabel('')
-    #     # Relevance
-    #     ax2 = fig.add_subplot(2,1,2)
-    #     plot_corr_coeff(ax2, self.topic_ids, self.experiments[3:])
-    #     fig.savefig(os.path.join(PLOTS_DIR, f'{self.dataset_id}_{self.embedding_method}.png'), dpi=fig.dpi, bbox_inches='tight')
+    def __generate_plots(self):
+        fig = plt.figure(figsize=(17.5,10))
+        # Redundancy
+        ax1 = fig.add_subplot(2,1,1)
+        plot_corr_coeff(ax1, self.topic_ids, self.experiments[:3])
+        ax1.set_xlabel('')
+        # Relevance
+        ax2 = fig.add_subplot(2,1,2)
+        plot_corr_coeff(ax2, self.topic_ids, self.experiments[3:])
+        fig.savefig(os.path.join(PLOTS_DIR, f'{self.dataset_id}_{self.embedding_method}.png'), dpi=fig.dpi, bbox_inches='tight')
           
     def execute(self):
         result = ''
