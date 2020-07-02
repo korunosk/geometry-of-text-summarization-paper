@@ -74,13 +74,37 @@ class TACDatasetClassification(Dataset):
         i1 = self.data[idx][1]
         i2 = self.data[idx][2]
         x = (load_embedded_item(self.embedding_method, self.dataset_id, topic_id, 'document_embs'),
-             load_embedded_item(self.embedding_method, self.dataset_id, topic_id, f'summary_{i1}_embs'),
-             load_embedded_item(self.embedding_method, self.dataset_id, topic_id, f'summary_{i2}_embs'))
-        y = float(self.data[idx][3])
+                load_embedded_item(self.embedding_method, self.dataset_id, topic_id, f'summary_{i1}_embs'),
+                load_embedded_item(self.embedding_method, self.dataset_id, topic_id, f'summary_{i2}_embs'))
+        y = int(self.data[idx][3])
         
         if self.transform is not None:
             return self.transform((x, y))
         return (x, y)
+
+
+class TACDatasetLoadedClassification(Dataset):
+
+    def __init__(self, dataset, data):
+        self.dataset = dataset
+        self.data = data
+
+    def __len__(self):
+        return len(self.data)
+    
+    def __getitem__(self, idx):
+        topic_id = self.data[idx][0]
+        
+        i1 = self.data[idx][1]
+        i2 = self.data[idx][2]
+        d = self.dataset[topic_id]['document_embs']
+        s1 = self.dataset[topic_id][f'summary_{i1}_embs']
+        s2 = self.dataset[topic_id][f'summary_{i2}_embs']
+        m1 = self.dataset[topic_id][f'mask_{i2}']
+        m2 = self.dataset[topic_id][f'mask_{i2}']
+        y = torch.tensor(float(self.data[idx][3]), dtype=torch.float)
+        
+        return d, s1, s2, m1, m2, y
 
 
 class Normalize():
@@ -96,7 +120,7 @@ class ToTensor():
 
 
 def repeat_mean(x: torch.tensor, M: int) -> torch.tensor:
-    ''' Repeats the mean of a tensor several times along the vertical axis'''
+    ''' Repeats the mean of a tensor several times along the vertical axis. '''
     x = torch.mean(x, axis=0)
     x = x.repeat(M, 1)
     return x
