@@ -17,7 +17,7 @@ from src.config import *
 from src.config_models import *
 
 
-def train_model_1_batch(embedding_method, dataset_id):
+def train_model_1_batch(embedding_method, dataset_id, **kwargs):
     config = CONFIG_MODELS['NNRougeRegModel']
 
     data = load_train_data(dataset_id, 'regression_rouge')
@@ -25,7 +25,7 @@ def train_model_1_batch(embedding_method, dataset_id):
     print(len(train), len(val))
 
     transform = transforms.Compose([ToTensor()])
-    dataset = TACDatasetRegressionRouge(embedding_method, dataset_id, train)
+    dataset = TACDatasetRegressionRouge(embedding_method, dataset_id, train, **kwargs)
     data_loader = DataLoader(dataset, batch_size=config['batch_size'], shuffle=True)
 
     model = NNRougeRegModel(config).to(device=device)
@@ -59,7 +59,7 @@ def train_model_1_batch(embedding_method, dataset_id):
     # plt.show()
 
 
-def train_model_2(embedding_method, dataset_id):
+def train_model_2(embedding_method, dataset_id, **kwargs):
     config = CONFIG_MODELS['NNWAvgPRModel']
 
     data = load_train_data(dataset_id, 'classification')
@@ -67,7 +67,7 @@ def train_model_2(embedding_method, dataset_id):
     print(len(train), len(val))
 
     transform = transforms.Compose([ToTensor()])
-    dataset = TACDatasetClassification(embedding_method, dataset_id, train)
+    dataset = TACDatasetClassification(embedding_method, dataset_id, train, **kwargs)
     data_loader = DataLoader(dataset, batch_size=config['batch_size'], shuffle=True, collate_fn=lambda x: x)
 
     model = NNWAvgPRModel(config).to(device=device)
@@ -108,7 +108,7 @@ def train_model_2(embedding_method, dataset_id):
     # plt.show()
 
 
-def train_model_2_batch(embedding_method, dataset_id):
+def train_model_2_batch(embedding_method, dataset_id, **kwargs):
     def evaluate(model, dataset, val):
         dataset_val = TACDatasetLoadedClassification(dataset, val)
         data_loader_val = DataLoader(dataset_val, batch_size=BATCH_SIZE_VAL, shuffle=True)
@@ -139,17 +139,17 @@ def train_model_2_batch(embedding_method, dataset_id):
     print(len(train), len(val))
 
     # transform = transforms.Compose([ToTensor(), Expand(20)])
-    # dataset_train = TACDatasetClassification(embedding_method, dataset_id, train, transform=transform)
+    # dataset_train = TACDatasetClassification(embedding_method, dataset_id, train, transform=transform, **kwargs)
 
     dataset = defaultdict(defaultdict)
     for topic_id in TOPIC_IDS[dataset_id]:
-        topic = load_embedded_topic(embedding_method, dataset_id, topic_id)
+        topic = load_embedded_topic(embedding_method, dataset_id, topic_id, **kwargs)
         document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
         document_embs = torch.tensor(document_embs, dtype=torch.float)
         summary_embs = torch.tensor(summary_embs, dtype=torch.float)
-        dataset[topic_id]['document_embs'] = repeat_mean(document_embs, 120)
+        dataset[topic_id]['document_embs'] = repeat_mean(document_embs, 150)
         for i, idx in enumerate(indices):
-            summary_embs_, mask_ = pad(summary_embs[idx[0]:idx[1]], 120)
+            summary_embs_, mask_ = pad(summary_embs[idx[0]:idx[1]], 150)
             dataset[topic_id]['summary_{}_embs'.format(summary_ids[i])] = summary_embs_
             dataset[topic_id]['mask_{}'.format(summary_ids[i])] = mask_
     
@@ -199,7 +199,7 @@ def train_model_2_batch(embedding_method, dataset_id):
     # plt.show()
 
 
-def train_model_3(embedding_method, dataset_id):
+def train_model_3(embedding_method, dataset_id, **kwargs):
     config = CONFIG_MODELS['LinSinkhornRegModel']
 
     data = load_train_data(dataset_id, 'regression')
@@ -207,7 +207,7 @@ def train_model_3(embedding_method, dataset_id):
     print(len(train), len(val))
 
     transform = transforms.Compose([Normalize(), ToTensor()])
-    dataset = TACDatasetRegression(embedding_method, dataset_id, train)
+    dataset = TACDatasetRegression(embedding_method, dataset_id, train, **kwargs)
     data_loader = DataLoader(dataset, batch_size=config['batch_size'], shuffle=True, collate_fn=lambda x: x)
 
     model = LinSinkhornRegModel(config).to(device=device)
@@ -249,9 +249,22 @@ def train_model_3(embedding_method, dataset_id):
     # plt.show()
 
 
-def train_model_4(embedding_method, dataset_id):
+def train_model_3_batch(embedding_method, dataset_id, **kwargs):
     pass
 
 
-def train_model_5(embedding_method, dataset_id):
+def train_model_4_batch(embedding_method, dataset_id, **kwargs):
     pass
+
+
+def train_model_5_batch(embedding_method, dataset_id, **kwargs):
+    pass
+
+
+PROCEDURES = [
+    train_model_1_batch,
+    train_model_2_batch,
+    train_model_3_batch,
+    train_model_4_batch,
+    train_model_5_batch
+]
