@@ -23,7 +23,9 @@
 
 The CUDA driver on 037 is older. Execute:
 
-    pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+```bash
+pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+```
 
 ## Directory structure
 
@@ -55,31 +57,37 @@ Models:
 > `base_data_dir/embeddings/embedding_method/dataset_id/layer/topic_id.json`
 
 ## Start bert-as-service
-    
-    # Activate environment
-    export PATH=/opt/anaconda3/bin:$PATH
-    source activate dlab
-    
-    # Install dependencies
-    pip install tensorflow==1.15
-    pip install bert-serving-server==1.10.0
-    
-    # Get pretrained BERT model
-    wget https://storage.googleapis.com/bert_models/2020_02_20/uncased_L-12_H-768_A-12.zip
-    mkdir bert
-    unzip uncased_L-12_H-768_A-12 -d bert
 
-    # BERT word-level embeddings
-    screen -r [id]
-    bert-serving-start -model_dir=bert -port 5557 -port_out 5558 -num_worker=8 -max_seq_len=NONE -max_batch_size=64 -pooling_strategy=NONE -show_tokens_to_client
-    # BERT sentence-level embeddings
-    screen -r [id]
-    bert-serving-start -model_dir=bert -port 5557 -port_out 5558 -num_worker=8 -max_seq_len=NONE -max_batch_size=64
+Currently we are using [Transformers](https://github.com/huggingface/transformers).
+
+```bash
+# Activate environment
+export PATH=/opt/anaconda3/bin:$PATH
+source activate dlab
+
+# Install dependencies
+pip install tensorflow==1.15
+pip install bert-serving-server==1.10.0
+
+# Get pretrained BERT model
+wget https://storage.googleapis.com/bert_models/2020_02_20/uncased_L-12_H-768_A-12.zip
+mkdir bert
+unzip uncased_L-12_H-768_A-12 -d bert
+
+# BERT word-level embeddings
+screen -r [id]
+bert-serving-start -model_dir=bert -port 5557 -port_out 5558 -num_worker=8 -max_seq_len=NONE -max_batch_size=64 -pooling_strategy=NONE -show_tokens_to_client
+# BERT sentence-level embeddings
+screen -r [id]
+bert-serving-start -model_dir=bert -port 5557 -port_out 5558 -num_worker=8 -max_seq_len=NONE -max_batch_size=64
+```
 
 ## Monitor NVIDIA GPU unit
 
-    nvidia-smi
-    nvidia-smi --query-gpu=memory.total,memory.free --format=csv -l 5
+```bash
+nvidia-smi
+nvidia-smi --query-gpu=memory.total,memory.free --format=csv -l 5
+```
 
 ## Scripts
 
