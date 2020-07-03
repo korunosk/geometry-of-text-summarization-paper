@@ -50,6 +50,7 @@ Models:
 > **Note**:
 >
 > Some of the embedding methods (ex. BERT) have additional subdirectory denoting the hidden state used to retrieve the representations.
+> 
 > Ex:
 > `base_data_dir/embeddings/embedding_method/dataset_id/layer/topic_id.json`
 
