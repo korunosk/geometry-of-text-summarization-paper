@@ -97,7 +97,7 @@ def make_encoder_bert_sent(**kwargs):
             return []
         inputs = tokenizer(words, is_pretokenized=True, return_tensors='pt')
         hidden_states = model(**inputs, output_hidden_states=True)[2]
-        return hidden_states[-2].squeeze()[1:-1].mean(axis=0).data.tolist()
+        return hidden_states[11].squeeze().squeeze()[1:-1].mean(axis=0).data.tolist()
 
     return lambda documents: encode_sentences(documents, encode)
 
