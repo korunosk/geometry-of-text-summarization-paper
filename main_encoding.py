@@ -7,9 +7,9 @@ from src.config import *
 
 if __name__ == '__main__':
 
-    desc = ', '.join([ '{} - {}'.format(i, embedding_method) for i, embedding_method in enumerate(EMBEDDING_METHODS) ])
-
     parser = argparse.ArgumentParser(description='Encodes topic items.')
+
+    desc = ', '.join([ '{} - {}'.format(i, embedding_method) for i, embedding_method in enumerate(EMBEDDING_METHODS) ])
 
     parser.add_argument('-em',
                         dest='embedding_method',
@@ -29,12 +29,10 @@ if __name__ == '__main__':
     
     if args.embedding_method == None:
         raise Exception('Not suitable embedding method chosen. Use -h for more info.')
-        exit()
     
     if args.embedding_method in (3, 5):
         if args.layer == None:
             raise Exception('Not suitable layer chosen. Use -h for more info.')
-            exit()
         
         kwargs['layer'] = args.layer
     
