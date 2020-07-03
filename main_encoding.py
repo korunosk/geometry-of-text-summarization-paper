@@ -17,17 +17,32 @@ if __name__ == '__main__':
                         type=int,
                         choices=range(len(EMBEDDING_METHODS)))
     
+    parser.add_argument('-l',
+                        dest='layer',
+                        help='Transformer\'s hidden state',
+                        type=int,
+                        choices=range(1, 13))
+    
     args = parser.parse_args()
+
+    kwargs = {}
     
     if args.embedding_method == None:
         raise Exception('Not suitable embedding method chosen. Use -h for more info.')
         exit()
     
+    if args.embedding_method in (3, 5):
+        if args.layer == None:
+            raise Exception('Not suitable layer chosen. Use -h for more info.')
+            exit()
+        
+        kwargs['layer'] = args.layer
+    
     embedding_method = EMBEDDING_METHODS[args.embedding_method]
 
     print(embedding_method)
 
-    encode = ENCODERS[args.embedding_method]()
+    encode = ENCODERS[args.embedding_method](**kwargs)
 
     for dataset_id in DATASET_IDS:
         print(dataset_id)
@@ -39,4 +54,4 @@ if __name__ == '__main__':
 
             topic = dataset[topic_id]
             topic_embedded = embedd_topic(topic, encode)
-            save_embedded_topic(embedding_method, dataset_id, topic_id, topic_embedded)
+            save_embedded_topic(embedding_method, dataset_id, topic_id, topic_embedded, **kwargs)

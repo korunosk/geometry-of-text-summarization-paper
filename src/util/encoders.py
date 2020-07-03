@@ -1,3 +1,7 @@
+import torch
+from transformers import BartTokenizer, BertTokenizer
+from transformers import BartModel, BertModel
+
 from gensim.parsing.preprocessing import *
 
 from bert_serving.client import BertClient
@@ -8,9 +12,12 @@ from .helpers import *
 
 FILTERS = [
     lambda s: s.lower(),
+    strip_tags,
     strip_punctuation,
     strip_multiple_whitespaces,
+    strip_numeric,
     remove_stopwords,
+    strip_short
 ]
 
 
@@ -24,7 +31,7 @@ def encode_sentences(documents, encode):
     return document_embs
 
 
-def make_encoder_lsa():
+def make_encoder_lsa(**kwargs):
     embedding_method = 'LSA'
     item_id = 'tac-300d'
     vocab, embs = load_embeddings(embedding_method, item_id)
@@ -39,7 +46,7 @@ def make_encoder_lsa():
     return lambda documents: encode_sentences(documents, encode)
 
 
-def make_encoder_glove():
+def make_encoder_glove(**kwargs):
     embedding_method = 'GloVe'
     item_id = 'glove.42B.300d'
     vocab, embs = load_embeddings(embedding_method, item_id)
@@ -51,7 +58,7 @@ def make_encoder_glove():
     return lambda documents: encode_sentences(documents, encode)
 
 
-def make_encoder_fasttext():
+def make_encoder_fasttext(**kwargs):
     embedding_method = 'fasttext'
     item_id = 'crawl-300d-2M'
     vocab, embs = load_embeddings(embedding_method, item_id)
@@ -63,35 +70,52 @@ def make_encoder_fasttext():
     return lambda documents: encode_sentences(documents, encode)
 
 
-def make_encoder_bert_word():
-    def extract(document_embs_list, words_list):
-        valid_embs = []
-        for document_embs, words in zip(document_embs_list, words_list):
-            for i in range(1, len(words)-1):
-                if words[i] in STOPWORDS or words[i] in PUNCTUATION:
-                    continue
-                valid_embs.append(document_embs[i])
-        return valid_embs
-    
-    def encode_sentences(documents):
-        bc = BertClient(port=5557, port_out=5558, output_fmt='list')
-        n = np.cumsum([0] + list(map(len, documents)))
-        document_embs_list, words_list = bc.encode(list(chain(*documents)), show_tokens=True)
-        bc.close()
-        return [ extract(document_embs_list[b:e], words_list[b:e]) for b, e in zip(n[:-1], n[1:]) ]
-    
-    return encode_sentences
+def make_encoder_bert_word(**kwargs):
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertModel.from_pretrained('bert-base-uncased')
+    model = model.eval()
+
+    def encode(sentence):
+        words = preprocess_string(sentence, FILTERS)
+        if not words:
+            return []
+        inputs = tokenizer(words, is_pretokenized=True, return_tensors='pt')
+        hidden_states = model(**inputs, output_hidden_states=True)[2]
+        return hidden_states[kwargs['layer']].squeeze()[1:-1].data.tolist()
+
+    return lambda documents: encode_sentences(documents, encode)
 
 
-def make_encoder_bert_sent():
-    def encode_sentences(documents):
-        bc = BertClient(port=5557, port_out=5558, output_fmt='list')
-        n = np.cumsum([0] + list(map(len, documents)))
-        document_embs_list = bc.encode(list(chain(*documents)))
-        bc.close()
-        return [ document_embs_list[b:e] for b, e in zip(n[:-1], n[1:]) ]
-    
-    return encode_sentences
+def make_encoder_bert_sent(**kwargs):
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertModel.from_pretrained('bert-base-uncased')
+    model = model.eval()
+
+    def encode(sentence):
+        words = preprocess_string(sentence, FILTERS)
+        if not words:
+            return []
+        inputs = tokenizer(words, is_pretokenized=True, return_tensors='pt')
+        hidden_states = model(**inputs, output_hidden_states=True)[2]
+        return hidden_states[-2].squeeze()[1:-1].mean(axis=0).data.tolist()
+
+    return lambda documents: encode_sentences(documents, encode)
+
+
+def make_encoder_bart_word(**kwargs):
+    tokenizer = BartTokenizer.from_pretrained('facebook/bart-large')
+    model = BartModel.from_pretrained('facebook/bart-large')
+    model = model.eval()
+
+    def encode(sentence):
+        words = preprocess_string(sentence, FILTERS)
+        if not words:
+            return []
+        inputs = tokenizer(words, is_pretokenized=True, return_tensors='pt')
+        hidden_states = model(**inputs, output_hidden_states=True)[3]
+        return hidden_states[kwargs['layer']].squeeze()[1:-1].data.tolist()
+
+    return lambda documents: encode_sentences(documents, encode)
 
 
 ENCODERS = [
@@ -99,5 +123,6 @@ ENCODERS = [
     make_encoder_glove,
     make_encoder_fasttext,
     make_encoder_bert_word,
-    make_encoder_bert_sent
+    make_encoder_bert_sent,
+    make_encoder_bart_word
 ]

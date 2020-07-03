@@ -45,13 +45,18 @@ def load_dataset(dataset_id):
 
 
 def load_embedded_topic(embedding_method, dataset_id, topic_id):
-    fname = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id, topic_id) + '_encoded.json'
+    fname = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id, topic_id)
+    if 'layer' in kwargs:
+        directory = os.path.join(directory, str(kwargs['layer']))
+    fname += '_encoded.json'
     with open(fname, mode='r') as fp:
         return orjson.loads(fp.read())
 
 
-def save_embedded_topic(embedding_method, dataset_id, topic_id, topic):
+def save_embedded_topic(embedding_method, dataset_id, topic_id, topic, **kwargs):
     directory = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id)
+    if 'layer' in kwargs:
+        directory = os.path.join(directory, str(kwargs['layer']))
     if not os.path.exists(directory):
         os.makedirs(directory)
     fname = os.path.join(directory, topic_id) + '_encoded.json'
