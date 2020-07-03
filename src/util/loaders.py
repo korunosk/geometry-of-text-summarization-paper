@@ -44,11 +44,11 @@ def load_dataset(dataset_id):
         return orjson.loads(fp.read())
 
 
-def load_embedded_topic(embedding_method, dataset_id, topic_id):
-    fname = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id, topic_id)
+def load_embedded_topic(embedding_method, dataset_id, topic_id, **kwargs):
+    directory = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id)
     if 'layer' in kwargs:
         directory = os.path.join(directory, str(kwargs['layer']))
-    fname += '_encoded.json'
+    fname = os.path.join(directory, topic_id) + '_encoded.json'
     with open(fname, mode='r') as fp:
         return orjson.loads(fp.read())
 
@@ -64,13 +64,20 @@ def save_embedded_topic(embedding_method, dataset_id, topic_id, topic, **kwargs)
         json.dump(topic, fp, indent=4)
 
 
-def load_embedded_item(embedding_method, dataset_id, topic_id, item_id):
-    fname = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id, topic_id, item_id) + '.npy'
+def load_embedded_item(embedding_method, dataset_id, topic_id, item_id, **kwargs):
+    directory = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id)
+    if 'layer' in kwargs:
+        directory = os.path.join(directory, str(kwargs['layer']))
+    directory = os.path.join(directory, topic_id)
+    fname = os.path.join(directory, item_id) + '.npy'
     return np.load(fname)
 
 
-def save_embedded_item(embedding_method, dataset_id, topic_id, item_id, item):
-    directory = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id, topic_id)
+def save_embedded_item(embedding_method, dataset_id, topic_id, item_id, item, **kwargs):
+    directory = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id)
+    if 'layer' in kwargs:
+        directory = os.path.join(directory, str(kwargs['layer']))
+    directory = os.path.join(directory, topic_id)
     if not os.path.exists(directory):
         os.makedirs(directory)
     fname = os.path.join(directory, item_id) + '.npy'
@@ -88,6 +95,7 @@ def save_train_data(dataset_id, item_id, item):
         os.makedirs(directory)
     fname = os.path.join(directory, item_id) + '.npy'
     np.save(fname, item)
+
 
 def load_model(embedding_method, dataset_id, model_id, Model, config):
     fname = os.path.join(MODELS_DIR, embedding_method, dataset_id, model_id) + '.pt'
