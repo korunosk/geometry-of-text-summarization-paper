@@ -28,21 +28,27 @@ The CUDA driver on 037 is older. Execute:
 ## Directory structure
 
 Datasets:
+
 `base_data_dir/dataset_id.json`
 
 Data:
+
 `base_data_dir/data/dataset_id/item.npy`
 
 Topics encoded:
+
 `base_data_dir/embeddings/embedding_method/dataset_id/topic_id.json`
 
 Topic items encoded:
+
 `base_data_dir/embeddings/embedding_method/dataset_id/topic_id/item.npy`
 
 Models:
+
 `base_data_dir/models/embedding_method/dataset_id/model.pt`
 
 > **Note**:
+>
 > Some of the embedding methods (ex. BERT) have additional subdirectory denoting the hidden state used to retrieve the representations.
 > Ex:
 > `base_data_dir/embeddings/embedding_method/dataset_id/layer/topic_id.json`
