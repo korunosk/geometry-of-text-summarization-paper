@@ -58,7 +58,7 @@ Models:
 
 ## Start bert-as-service
 
-Currently we are using [Transformers](https://github.com/huggingface/transformers).
+Currently, we are using [Transformers](https://github.com/huggingface/transformers).
 
 ```bash
 # Activate environment
@@ -80,6 +80,12 @@ bert-serving-start -model_dir=bert -port 5557 -port_out 5558 -num_worker=8 -max_
 # BERT sentence-level embeddings
 screen -r [id]
 bert-serving-start -model_dir=bert -port 5557 -port_out 5558 -num_worker=8 -max_seq_len=NONE -max_batch_size=64
+```
+
+## Start TensorBoard
+
+```bash
+tensorboard --logdir runs/
 ```
 
 ## Monitor NVIDIA GPU unit
