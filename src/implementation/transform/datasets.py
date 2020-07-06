@@ -109,11 +109,12 @@ class TACDatasetLoadedClassification(Dataset):
         d  = self.dataset[topic_id]['document_embs']
         s1 = self.dataset[topic_id][f'summary_{i1}_embs']
         s2 = self.dataset[topic_id][f'summary_{i2}_embs']
-        m1 = self.dataset[topic_id][f'mask_{i2}']
-        m2 = self.dataset[topic_id][f'mask_{i2}']
+        a  = self.dataset[topic_id]['aux']
+        a1 = self.dataset[topic_id][f'aux_{i2}']
+        a2 = self.dataset[topic_id][f'aux_{i2}']
         y  = torch.tensor(float(self.data[idx][3]), dtype=torch.float)
         
-        return d, s1, s2, m1, m2, y
+        return d, s1, s2, a, a1, a2, y
 
 
 class Normalize():
@@ -147,6 +148,20 @@ def pad(x: torch.tensor, M: int) -> (torch.tensor, torch.tensor):
     mask = mask.view(-1, 1)
 
     return p, mask
+
+def pad_h(x: torch.tensor, M: int) -> (torch.tensor, torch.tensor):
+    m, n = x.shape
+
+    p = torch.zeros(size=(M, n), dtype=torch.float)
+    p[:m,:] = x
+
+    hist = torch.zeros(size=(M, ), dtype=torch.float)
+    hist[:m] = 1
+    hist = hist / m
+
+    return p, hist
+
+
 
 class Expand(): 
     def __init__(self, M):

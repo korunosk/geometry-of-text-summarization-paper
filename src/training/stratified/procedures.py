@@ -148,10 +148,11 @@ def train_model_2_batch(embedding_method, dataset_id, **kwargs):
         document_embs = torch.tensor(document_embs, dtype=torch.float)
         summary_embs = torch.tensor(summary_embs, dtype=torch.float)
         dataset[topic_id]['document_embs'] = repeat_mean(document_embs, 150)
+        dataset[topic_id]['aux'] = None
         for i, idx in enumerate(indices):
             summary_embs_, mask_ = pad(summary_embs[idx[0]:idx[1]], 150)
             dataset[topic_id]['summary_{}_embs'.format(summary_ids[i])] = summary_embs_
-            dataset[topic_id]['mask_{}'.format(summary_ids[i])] = mask_
+            dataset[topic_id]['aux_{}'.format(summary_ids[i])] = mask_
     
     dataset_train = TACDatasetLoadedClassification(dataset, train)
     data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
@@ -167,7 +168,7 @@ def train_model_2_batch(embedding_method, dataset_id, **kwargs):
         print(f'Epoch: {epoch + 1}')
 
         for i, batch in enumerate(data_loader_train):
-            d, s1, s2, m1, m2, y = batch
+            d, s1, s2, _, m1, m2, y = batch
 
             y_hat = model(d.to(device=device),
                           s1.to(device=device),
