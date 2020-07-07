@@ -18,8 +18,8 @@ class NNRougeRegModel(nn.Module):
     def transform(self, x):
         return F.relu(self.layer(x))
 
-    def predict(self, d, s):
-        return self.sinkhorn(self.transform(d), self.transform(s))
+    def predict(self, d, s, h, hs):
+        return self.sinkhorn(h, self.transform(d), hs, self.transform(s))
 
     def forward(self, sent):
         return torch.norm(self.transform(sent), p=2, dim=1)

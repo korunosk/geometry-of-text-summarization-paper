@@ -35,7 +35,7 @@ def accuracy(forward, dataset, val, batch_size_val=BATCH_SIZE_VAL):
     return auc.cpu().numpy() / len(dataset_val)
 
 
-def load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summaries):
+def load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summary):
     dataset = defaultdict(defaultdict)
     for topic_id in TOPIC_IDS[dataset_id]:
         topic = load_embedded_topic(embedding_method, dataset_id, layer, topic_id)
@@ -45,7 +45,7 @@ def load_dataset(embedding_method, dataset_id, layer, transform_documents, trans
         dataset[topic_id]['documents'] = transform_documents(document_embs)
         for i, idx in enumerate(indices):
             dataset[topic_id]['summary_{}'.format(summary_ids[i])] = \
-                transform_summaries(summary_embs[idx[0]:idx[1]])
+                transform_summary(summary_embs[idx[0]:idx[1]])
     return dataset
      
 
@@ -57,7 +57,6 @@ def train_model_1(embedding_method, dataset_id, layer):
     train, val = stratified_sampling(data)
     print(len(train), len(val))
 
-    transform = transforms.Compose([ToTensor()])
     dataset = TACDatasetRegressionRouge(embedding_method, dataset_id, layer, train)
     data_loader = DataLoader(dataset, batch_size=config['batch_size'], shuffle=True)
 
@@ -72,7 +71,7 @@ def train_model_1(embedding_method, dataset_id, layer):
         print(f'Epoch: {epoch + 1}')
 
         for batch in data_loader:
-            (s, ), y = transform(batch)
+            (s, ), y = batch
 
             y_hat = model(s.to(DEVICE1))
 
@@ -109,14 +108,14 @@ def train_model_2(embedding_method, dataset_id, layer):
             'aux': mask_
         }
     
-    def transform_summaries(summary_embs):
+    def transform_summary(summary_embs):
         summary_embs_, mask_ = pad(summary_embs, 15)
         return {
             'embs': summary_embs_,
             'aux': mask_
         }
 
-    dataset = load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summaries)
+    dataset = load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summary)
     
     dataset_train = TACDatasetLoadedClassification(dataset, train)
     data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
@@ -187,14 +186,14 @@ def train_model_4(embedding_method, dataset_id, layer):
             'aux': hist_
         }
     
-    def transform_summaries(summary_embs):
+    def transform_summary(summary_embs):
         summary_embs_, hist_ = pad_h(summary_embs, 15)
         return {
             'embs': summary_embs_,
             'aux': hist_
         }
 
-    dataset = load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summaries)
+    dataset = load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summary)
     
     dataset_train = TACDatasetLoadedClassification(dataset, train)
     data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
@@ -262,14 +261,14 @@ def train_model_5(embedding_method, dataset_id, layer):
             'aux': hist_
         }
     
-    def transform_summaries(summary_embs):
+    def transform_summary(summary_embs):
         summary_embs_, hist_ = pad_h(summary_embs, 15)
         return {
             'embs': summary_embs_,
             'aux': hist_
         }
 
-    dataset = load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summaries)
+    dataset = load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summary)
     
     dataset_train = TACDatasetLoadedClassification(dataset, train)
     data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
