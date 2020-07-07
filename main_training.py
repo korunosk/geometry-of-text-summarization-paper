@@ -40,7 +40,7 @@ if __name__ == '__main__':
                         dest='procedure',
                         help='Train procedure: {}'.format(desc),
                         type=int,
-                        choices=range(len(stratified.PROCEDURES)))
+                        choices=range(1, len(stratified.PROCEDURES) + 1))
     
     args = parser.parse_args()
 
@@ -63,5 +63,12 @@ if __name__ == '__main__':
     
     embedding_method = EMBEDDING_METHODS[args.embedding_method]
     dataset_id = DATASET_IDS[args.dataset_id]
+    procedure = stratified.PROCEDURES[args.procedure - 1]
 
-    stratified.PROCEDURES[args.procedure](embedding_method, dataset_id, **kwargs)
+    print(embedding_method, dataset_id, procedure.__name__)
+
+    start = time.time()
+    procedure(embedding_method, dataset_id, **kwargs)
+    end = time.time()
+    
+    print('Elapsed: {:}\n'.format(format_time(end - start)))
