@@ -150,6 +150,8 @@ def pad(x: torch.tensor, M: int) -> (torch.tensor, torch.tensor):
     return p, mask
 
 def pad_h(x: torch.tensor, M: int) -> (torch.tensor, torch.tensor):
+    ''' Pads a tensor with zero-valued vectors along the vertical axis and
+    creates the histogram for the original tensor's vectors. '''
     m, n = x.shape
 
     p = torch.zeros(size=(M, n), dtype=torch.float)
@@ -160,7 +162,6 @@ def pad_h(x: torch.tensor, M: int) -> (torch.tensor, torch.tensor):
     hist = hist / m
 
     return p, hist
-
 
 
 class Expand(): 
