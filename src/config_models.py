@@ -5,15 +5,16 @@ CONFIG_MODELS = {
         'p': 2,
         'blur': .05,
         'scaling': .9,
-        'learning_rate': 1e-4,
-        'batch_size': 128
+        'learning_rate': .01,
+        'batch_size': 128,
+        'epochs': 5
     },
     'NNWAvgPRModel': {
         'D_in': 768,
         'D_out': 768,
         'H': 1536,
         'scaling_factor': 1,
-        'learning_rate': 1e-4,
+        'learning_rate': .01,
         'batch_size': 128,
         'epochs': 5
     },
@@ -23,8 +24,9 @@ CONFIG_MODELS = {
         'p': 2,
         'blur': .05,
         'scaling': .9,
-        'learning_rate': 1e-2,
-        'batch_size': 128
+        'learning_rate': .01,
+        'batch_size': 128,
+        'epochs': 5
     },
     'LinSinkhornPRModel': {
         'D_in': 768,
@@ -33,8 +35,9 @@ CONFIG_MODELS = {
         'blur': .05,
         'scaling': .9,
         'scaling_factor': 1,
-        'learning_rate': 1e-2,
-        'batch_size': 128
+        'learning_rate': .01,
+        'batch_size': 128,
+        'epochs': 5
     },
     'NNSinkhornPRModel': {
         'D_in': 768,
@@ -43,7 +46,8 @@ CONFIG_MODELS = {
         'blur': .05,
         'scaling': .9,
         'scaling_factor': 1,
-        'learning_rate': 1e-2,
-        'batch_size': 128
+        'learning_rate': .01,
+        'batch_size': 128,
+        'epochs': 5
     }
 }
