@@ -62,7 +62,7 @@ def load_dataset(embedding_method, dataset_id, layer, transform_documents, trans
      
 
 
-def train_model_1(embedding_method, dataset_id, **kwargs):
+def train_model_1(embedding_method, dataset_id, layer):
     config = CONFIG_MODELS['NNRougeRegModel']
 
     data = load_train_data(dataset_id, 'regression_rouge')
@@ -70,7 +70,7 @@ def train_model_1(embedding_method, dataset_id, **kwargs):
     print(len(train), len(val))
 
     transform = transforms.Compose([ToTensor()])
-    dataset = TACDatasetRegressionRouge(embedding_method, dataset_id, train, **kwargs)
+    dataset = TACDatasetRegressionRouge(embedding_method, dataset_id, layer, train)
     data_loader = DataLoader(dataset, batch_size=config['batch_size'], shuffle=True)
 
     model = NNRougeRegModel(config).to(DEVICE1)
@@ -107,7 +107,7 @@ def train_model_1(embedding_method, dataset_id, **kwargs):
     # plt.show()
 
 
-def train_model_2(embedding_method, dataset_id, **kwargs):
+def train_model_2(embedding_method, dataset_id, layer):
     config = CONFIG_MODELS['NNWAvgPRModel']
 
     data = load_train_data(dataset_id, 'classification')
@@ -116,7 +116,7 @@ def train_model_2(embedding_method, dataset_id, **kwargs):
 
     dataset = defaultdict(defaultdict)
     for topic_id in TOPIC_IDS[dataset_id]:
-        topic = load_embedded_topic(embedding_method, dataset_id, topic_id, **kwargs)
+        topic = load_embedded_topic(embedding_method, dataset_id, layer, topic_id)
         document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
         document_embs = torch.tensor(document_embs, dtype=torch.float)
         summary_embs = torch.tensor(summary_embs, dtype=torch.float)
@@ -178,11 +178,11 @@ def train_model_2(embedding_method, dataset_id, **kwargs):
     # plt.show()
 
 
-def train_model_3(embedding_method, dataset_id, **kwargs):
+def train_model_3(embedding_method, dataset_id, layer):
     pass
 
 
-def train_model_4(embedding_method, dataset_id, **kwargs):
+def train_model_4(embedding_method, dataset_id, layer):
     config = CONFIG_MODELS['LinSinkhornPRModel']
 
     data = load_train_data(dataset_id, 'classification')
@@ -255,7 +255,7 @@ def train_model_4(embedding_method, dataset_id, **kwargs):
     # plt.show()
 
 
-def train_model_5(embedding_method, dataset_id, **kwargs):
+def train_model_5(embedding_method, dataset_id, layer):
     config = CONFIG_MODELS['NNSinkhornPRModel']
 
     data = load_train_data(dataset_id, 'classification')

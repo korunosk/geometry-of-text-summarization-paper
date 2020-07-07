@@ -44,19 +44,19 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
-    kwargs = {}
-    
     if args.embedding_method == None:
         raise Exception('Not suitable embedding method chosen. Use -h for more info.')
     
     if args.dataset_id == None:
         raise Exception('Not suitable dataset ID chosen. Use -h for more info.')
 
+    layer = None
+
     if args.embedding_method in (3, 5):
         if args.layer == None:
             raise Exception('Not suitable layer chosen. Use -h for more info.')
         
-        kwargs['layer'] = args.layer
+        layer = args.layer
     
     if args.procedure == None:
         raise Exception('Not suitable procedure chosen. Use -h for more info.')
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     print(embedding_method, dataset_id, procedure.__name__)
 
     start = time.time()
-    procedure(embedding_method, dataset_id, **kwargs)
+    procedure(embedding_method, dataset_id, layer)
     end = time.time()
     
     print('Elapsed: {:}\n'.format(format_time(end - start)))

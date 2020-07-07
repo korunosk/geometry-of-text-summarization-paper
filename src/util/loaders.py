@@ -44,19 +44,19 @@ def load_dataset(dataset_id):
         return orjson.loads(fp.read())
 
 
-def load_embedded_topic(embedding_method, dataset_id, topic_id, **kwargs):
+def load_embedded_topic(embedding_method, dataset_id, layer, topic_id):
     directory = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id)
-    if 'layer' in kwargs:
-        directory = os.path.join(directory, str(kwargs['layer']))
+    if layer:
+        directory = os.path.join(directory, str(layer))
     fname = os.path.join(directory, topic_id) + '_encoded.json'
     with open(fname, mode='r') as fp:
         return orjson.loads(fp.read())
 
 
-def save_embedded_topic(embedding_method, dataset_id, topic_id, topic, **kwargs):
+def save_embedded_topic(embedding_method, dataset_id, layer, topic_id, topic):
     directory = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id)
-    if 'layer' in kwargs:
-        directory = os.path.join(directory, str(kwargs['layer']))
+    if layer:
+        directory = os.path.join(directory, str(layer))
     if not os.path.exists(directory):
         os.makedirs(directory)
     fname = os.path.join(directory, topic_id) + '_encoded.json'
@@ -64,19 +64,19 @@ def save_embedded_topic(embedding_method, dataset_id, topic_id, topic, **kwargs)
         json.dump(topic, fp, indent=4)
 
 
-def load_embedded_item(embedding_method, dataset_id, topic_id, item_id, **kwargs):
+def load_embedded_item(embedding_method, dataset_id, layer, topic_id, item_id):
     directory = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id)
-    if 'layer' in kwargs:
-        directory = os.path.join(directory, str(kwargs['layer']))
+    if layer:
+        directory = os.path.join(directory, str(layer))
     directory = os.path.join(directory, topic_id)
     fname = os.path.join(directory, item_id) + '.npy'
     return np.load(fname)
 
 
-def save_embedded_item(embedding_method, dataset_id, topic_id, item_id, item, **kwargs):
+def save_embedded_item(embedding_method, dataset_id, layer, topic_id, item_id, item):
     directory = os.path.join(EMBEDDINGS_DIR, embedding_method, dataset_id)
-    if 'layer' in kwargs:
-        directory = os.path.join(directory, str(kwargs['layer']))
+    if layer:
+        directory = os.path.join(directory, str(layer))
     directory = os.path.join(directory, topic_id)
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -97,16 +97,21 @@ def save_train_data(dataset_id, item_id, item):
     np.save(fname, item)
 
 
-def load_model(embedding_method, dataset_id, model_id, Model, config):
-    fname = os.path.join(MODELS_DIR, embedding_method, dataset_id, model_id) + '.pt'
+def load_model(embedding_method, dataset_id, layer, model_id, Model, config):
+    directory = os.path.join(MODELS_DIR, embedding_method, dataset_id)
+    if layer:
+        directory = os.path.join(directory, str(layer))
+    fname = os.path.join(directory, model_id) + '.pt'
     model = Model(config)
     model.load_state_dict(torch.load(fname))
     model.eval()
     return model
 
 
-def save_model(embedding_method, dataset_id, model_id, model):
+def save_model(embedding_method, dataset_id, layer, model_id, model):
     directory = os.path.join(MODELS_DIR, embedding_method, dataset_id)
+    if layer:
+        directory = os.path.join(directory, str(layer))
     if not os.path.exists(directory):
         os.makedirs(directory)
     fname = os.path.join(directory, model_id) + '.pt'

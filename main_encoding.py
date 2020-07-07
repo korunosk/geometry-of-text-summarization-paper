@@ -25,22 +25,22 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
-    kwargs = {}
-    
     if args.embedding_method == None:
         raise Exception('Not suitable embedding method chosen. Use -h for more info.')
     
+    layer = None
+
     if args.embedding_method in (3, 5):
         if args.layer == None:
             raise Exception('Not suitable layer chosen. Use -h for more info.')
         
-        kwargs['layer'] = args.layer
+        layer = args.layer
     
     embedding_method = EMBEDDING_METHODS[args.embedding_method]
 
     print(embedding_method)
 
-    encode = ENCODERS[args.embedding_method](**kwargs)
+    encode = ENCODERS[args.embedding_method](layer)
 
     for dataset_id in DATASET_IDS:
         print(dataset_id)
@@ -52,4 +52,4 @@ if __name__ == '__main__':
 
             topic = dataset[topic_id]
             topic_embedded = embedd_topic(topic, encode)
-            save_embedded_topic(embedding_method, dataset_id, topic_id, topic_embedded, **kwargs)
+            save_embedded_topic(embedding_method, dataset_id, layer, topic_id, topic_embedded)

@@ -11,12 +11,12 @@ from src.util.helpers import *
 
 class TACDatasetRegression(Dataset):
 
-    def __init__(self, embedding_method, dataset_id, data, transform=None, **kwargs):
+    def __init__(self, embedding_method, dataset_id, layer, data, transform=None):
         self.embedding_method = embedding_method
         self.dataset_id = dataset_id
+        self.layer = layer
         self.data = data
         self.transform = transform
-        self.kwargs = kwargs
 
     def __len__(self):
         return len(self.data)
@@ -26,8 +26,8 @@ class TACDatasetRegression(Dataset):
         
         i = self.data[idx][1]
         x = (
-            load_embedded_item(self.embedding_method, self.dataset_id, topic_id, 'document_embs', **self.kwargs),
-            load_embedded_item(self.embedding_method, self.dataset_id, topic_id, f'summary_{i}_embs', **self.kwargs)
+            load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, 'document_embs'),
+            load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, f'summary_{i}_embs')
         )
         y = float(self.data[idx][2])
         
@@ -38,12 +38,12 @@ class TACDatasetRegression(Dataset):
 
 class TACDatasetRegressionRouge(Dataset):
 
-    def __init__(self, embedding_method, dataset_id, data, transform=None, **kwargs):
+    def __init__(self, embedding_method, dataset_id, layer, data, transform=None):
         self.embedding_method = embedding_method
         self.dataset_id = dataset_id
+        self.layer = layer
         self.data = data
         self.transform = transform
-        self.kwargs = kwargs
 
     def __len__(self):
         return len(self.data)
@@ -52,7 +52,7 @@ class TACDatasetRegressionRouge(Dataset):
         topic_id = self.data[idx][0]
         
         i = int(self.data[idx][1])
-        document_embs = load_embedded_item(self.embedding_method, self.dataset_id, topic_id, 'document_embs', **self.kwargs)
+        document_embs = load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, 'document_embs')
         s = (
             document_embs[i],
         )
@@ -65,12 +65,12 @@ class TACDatasetRegressionRouge(Dataset):
 
 class TACDatasetClassification(Dataset):
 
-    def __init__(self, embedding_method, dataset_id, data, transform=None, **kwargs):
+    def __init__(self, embedding_method, dataset_id, layer, data, transform=None):
         self.embedding_method = embedding_method
         self.dataset_id = dataset_id
+        self.layer = layer
         self.data = data
         self.transform = transform
-        self.kwargs = kwargs
 
     def __len__(self):
         return len(self.data)
@@ -81,9 +81,9 @@ class TACDatasetClassification(Dataset):
         i1 = self.data[idx][1]
         i2 = self.data[idx][2]
         x = (
-            load_embedded_item(self.embedding_method, self.dataset_id, topic_id, 'document_embs', **self.kwargs),
-            load_embedded_item(self.embedding_method, self.dataset_id, topic_id, f'summary_{i1}_embs', **self.kwargs),
-            load_embedded_item(self.embedding_method, self.dataset_id, topic_id, f'summary_{i2}_embs', **self.kwargs)
+            load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, 'document_embs'),
+            load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, f'summary_{i1}_embs'),
+            load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, f'summary_{i2}_embs')
         )
         y = int(self.data[idx][3])
         

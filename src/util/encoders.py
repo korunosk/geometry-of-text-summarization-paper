@@ -31,7 +31,7 @@ def encode_sentences(documents, encode):
     return document_embs
 
 
-def make_encoder_lsa(**kwargs):
+def make_encoder_lsa(layer):
     embedding_method = 'LSA'
     item_id = 'tac-300d'
     vocab, embs = load_embeddings(embedding_method, item_id)
@@ -46,7 +46,7 @@ def make_encoder_lsa(**kwargs):
     return lambda documents: encode_sentences(documents, encode)
 
 
-def make_encoder_glove(**kwargs):
+def make_encoder_glove(layer):
     embedding_method = 'GloVe'
     item_id = 'glove.42B.300d'
     vocab, embs = load_embeddings(embedding_method, item_id)
@@ -58,7 +58,7 @@ def make_encoder_glove(**kwargs):
     return lambda documents: encode_sentences(documents, encode)
 
 
-def make_encoder_fasttext(**kwargs):
+def make_encoder_fasttext(layer):
     embedding_method = 'fasttext'
     item_id = 'crawl-300d-2M'
     vocab, embs = load_embeddings(embedding_method, item_id)
@@ -70,7 +70,7 @@ def make_encoder_fasttext(**kwargs):
     return lambda documents: encode_sentences(documents, encode)
 
 
-def make_encoder_bert_word(**kwargs):
+def make_encoder_bert_word(layer):
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     model = BertModel.from_pretrained('bert-base-uncased')
     model = model.eval()
@@ -81,12 +81,12 @@ def make_encoder_bert_word(**kwargs):
             return []
         inputs = tokenizer(words, is_pretokenized=True, return_tensors='pt')
         hidden_states = model(**inputs, output_hidden_states=True)[2]
-        return hidden_states[kwargs['layer']].squeeze()[1:-1].data.tolist()
+        return hidden_states[layer].squeeze()[1:-1].data.tolist()
 
     return lambda documents: encode_sentences(documents, encode)
 
 
-def make_encoder_bert_sent(**kwargs):
+def make_encoder_bert_sent(layer):
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     model = BertModel.from_pretrained('bert-base-uncased')
     model = model.eval()
@@ -102,7 +102,7 @@ def make_encoder_bert_sent(**kwargs):
     return lambda documents: encode_sentences(documents, encode)
 
 
-def make_encoder_bart_word(**kwargs):
+def make_encoder_bart_word(layer):
     tokenizer = BartTokenizer.from_pretrained('facebook/bart-large')
     model = BartModel.from_pretrained('facebook/bart-large')
     model = model.eval()
@@ -113,7 +113,7 @@ def make_encoder_bart_word(**kwargs):
             return []
         inputs = tokenizer(words, is_pretokenized=True, return_tensors='pt')
         hidden_states = model(**inputs, output_hidden_states=True)[3]
-        return hidden_states[kwargs['layer']].squeeze()[1:-1].data.tolist()
+        return hidden_states[layer].squeeze()[1:-1].data.tolist()
 
     return lambda documents: encode_sentences(documents, encode)
 
