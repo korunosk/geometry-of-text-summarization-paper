@@ -18,11 +18,11 @@ class NNRougeRegModel(nn.Module):
     def transform(self, x):
         return F.relu(self.layer(x))
 
-    def predict(self, d, s, h, hs):
-        return self.sinkhorn(h, self.transform(d), hs, self.transform(s))
+    def predict(self, d, si, h, hi):
+        return self.sinkhorn(h, self.transform(d), hi, self.transform(si))
 
-    def forward(self, sent):
-        return torch.norm(self.transform(sent), p=2, dim=1)
+    def forward(self, e):
+        return torch.norm(self.transform(e), p=2, dim=1)
 
 
 class NNWAvgPRModel(nn.Module):
@@ -39,12 +39,12 @@ class NNWAvgPRModel(nn.Module):
 
     def predict(self, d, s, m):
         x = torch.cat((self.transform(d), self.transform(s)), axis=2)
-        z = self.layer2(x)
+        z = self.layer2(x).squeeze()
         return torch.stack([ torch.sum(z[i].masked_select(m[i])) for i in range(z.shape[0]) ])
 
-    def forward(self, d, s1, s2, m1, m2):
-        score1 = self.predict(d, s1, m1)
-        score2 = self.predict(d, s2, m2)
+    def forward(self, d, si, sj, mi, mj):
+        score1 = self.predict(d, si, mi)
+        score2 = self.predict(d, sj, mj)
         return self.sigm(self.config['scaling_factor'] * (score1 - score2))
 
 
@@ -57,13 +57,13 @@ class LinSinkhornRegModel(nn.Module):
         self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
     
     def transform(self, x):
-        return torch.mm(x, self.M.unsqueeze(0).expand(x.shape[0], -1, -1))
+        return torch.bmm(x, self.M.unsqueeze(0).expand(x.shape[0], -1, -1))
 
-    def predict(self, d, s, h, ds):
-        return self.sinkhorn(h, self.transform(d), hs, self.transform(s))
+    def predict(self, d, si, h, hi):
+        return self.sinkhorn(h, self.transform(d), hi, self.transform(si))
 
-    def forward(self, d, s, h, hs):
-        return torch.exp(-self.predict(d, s, h, hs))
+    def forward(self, d, si, h, hi):
+        return torch.exp(-self.predict(d, si, h, hi))
 
 
 class LinSinkhornPRModel(nn.Module):
@@ -78,12 +78,12 @@ class LinSinkhornPRModel(nn.Module):
     def transform(self, x):
         return torch.bmm(x, self.M.unsqueeze(0).expand(x.shape[0], -1, -1))
 
-    def predict(self, d, s, h, hs):
-        return self.sinkhorn(h, self.transform(d), hs, self.transform(s))
+    def predict(self, d, si, h, hi):
+        return self.sinkhorn(h, self.transform(d), hi, self.transform(si))
 
-    def forward(self, d, s1, s2, h, h1, h2):
-        dist1 = self.predict(d, s1, h, h1)
-        dist2 = self.predict(d, s2, h, h2)
+    def forward(self, d, si, sj, h, hi, hj):
+        dist1 = self.predict(d, si, h, hi)
+        dist2 = self.predict(d, sj, h, hj)
         return self.sigm(self.config['scaling_factor'] * (dist2 - dist1))
 
 
@@ -99,10 +99,10 @@ class NNSinkhornPRModel(nn.Module):
     def transform(self, x):
         return F.relu(self.layer(x))
     
-    def predict(self, d, s, h, hs):
-        return self.sinkhorn(h, self.transform(d), hs, self.transform(s))
+    def predict(self, d, si, h, hi):
+        return self.sinkhorn(h, self.transform(d), hi, self.transform(si))
 
-    def forward(self, d, s1, s2, h, h1, h2):
-        dist1 = self.predict(d, s1, h, h1)
-        dist2 = self.predict(d, s2, h, h2)
+    def forward(self, d, si, sj, h, hi, hj):
+        dist1 = self.predict(d, si, h, hi)
+        dist2 = self.predict(d, sj, h, hj)
         return self.sigm(self.config['scaling_factor'] * (dist2 - dist1))

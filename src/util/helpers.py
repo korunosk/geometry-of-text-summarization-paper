@@ -44,7 +44,7 @@ def make_annotations(summary_ids, pyr_scores, embeddings):
     } for summary_id, pyr_score, embedding in zip(summary_ids, pyr_scores, embeddings) ]
 
 
-def embedd_topic(topic, encode):
+def embed_topic(topic, encode):
     documents = topic['documents']
     annotations = topic['annotations']
 

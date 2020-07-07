@@ -9,14 +9,11 @@ from sklearn.preprocessing import normalize
 from src.util.helpers import *
 
 
-class TACDatasetRegression(Dataset):
+class TACDatasetRegressionRouge(Dataset):
 
-    def __init__(self, embedding_method, dataset_id, layer, data, transform=None):
-        self.embedding_method = embedding_method
-        self.dataset_id = dataset_id
-        self.layer = layer
+    def __init__(self, dataset, data):
+        self.dataset = dataset
         self.data = data
-        self.transform = transform
 
     def __len__(self):
         return len(self.data)
@@ -25,25 +22,17 @@ class TACDatasetRegression(Dataset):
         topic_id = self.data[idx][0]
         
         i = self.data[idx][1]
-        x = (
-            load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, 'document_embs'),
-            load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, f'summary_{i}_embs')
-        )
-        y = float(self.data[idx][2])
+        e = self.dataset[topic_id]['documents']['embs'][i]
+        y = torch.tensor(self.data[idx][2], dtype=torch.float)
         
-        if self.transform is not None:
-            return self.transform((x, y))
-        return (x, y)
+        return e, y
 
 
-class TACDatasetRegressionRouge(Dataset):
+class TACDatasetRegression(Dataset):
 
-    def __init__(self, embedding_method, dataset_id, layer, data, transform=None):
-        self.embedding_method = embedding_method
-        self.dataset_id = dataset_id
-        self.layer = layer
+    def __init__(self, dataset, data):
+        self.dataset = dataset
         self.data = data
-        self.transform = transform
 
     def __len__(self):
         return len(self.data)
@@ -51,48 +40,17 @@ class TACDatasetRegressionRouge(Dataset):
     def __getitem__(self, idx):
         topic_id = self.data[idx][0]
         
-        i = int(self.data[idx][1])
-        document_embs = load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, 'document_embs')
-        s = (
-            document_embs[i],
-        )
-        y = float(self.data[idx][2])
+        i  = self.data[idx][1]
+        d  = self.dataset[topic_id]['documents']['embs']
+        si = self.dataset[topic_id][f'summary_{i}']['embs']
+        a  = self.dataset[topic_id]['documents']['aux']
+        ai = self.dataset[topic_id][f'summary_{i}']['aux']
+        y  = torch.tensor(self.data[idx][2], dtype=torch.float)
         
-        if self.transform is not None:
-            return self.transform((s, y))
-        return (s, y)
+        return d, si, a, ai, y
 
 
 class TACDatasetClassification(Dataset):
-
-    def __init__(self, embedding_method, dataset_id, layer, data, transform=None):
-        self.embedding_method = embedding_method
-        self.dataset_id = dataset_id
-        self.layer = layer
-        self.data = data
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.data)
-    
-    def __getitem__(self, idx):
-        topic_id = self.data[idx][0]
-        
-        i1 = self.data[idx][1]
-        i2 = self.data[idx][2]
-        x = (
-            load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, 'document_embs'),
-            load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, f'summary_{i1}_embs'),
-            load_embedded_item(self.embedding_method, self.dataset_id, self.layer, topic_id, f'summary_{i2}_embs')
-        )
-        y = int(self.data[idx][3])
-        
-        if self.transform is not None:
-            return self.transform((x, y))
-        return (x, y)
-
-
-class TACDatasetLoadedClassification(Dataset):
 
     def __init__(self, dataset, data):
         self.dataset = dataset
@@ -104,75 +62,43 @@ class TACDatasetLoadedClassification(Dataset):
     def __getitem__(self, idx):
         topic_id = self.data[idx][0]
         
-        i1 = self.data[idx][1]
-        i2 = self.data[idx][2]
+        i  = self.data[idx][1]
+        j  = self.data[idx][2]
         d  = self.dataset[topic_id]['documents']['embs']
-        s1 = self.dataset[topic_id][f'summary_{i1}']['embs']
-        s2 = self.dataset[topic_id][f'summary_{i2}']['embs']
+        si = self.dataset[topic_id][f'summary_{i}']['embs']
+        sj = self.dataset[topic_id][f'summary_{j}']['embs']
         a  = self.dataset[topic_id]['documents']['aux']
-        a1 = self.dataset[topic_id][f'summary_{i1}']['aux']
-        a2 = self.dataset[topic_id][f'summary_{i2}']['aux']
-        y  = torch.tensor(float(self.data[idx][3]), dtype=torch.float)
+        ai = self.dataset[topic_id][f'summary_{i}']['aux']
+        aj = self.dataset[topic_id][f'summary_{j}']['aux']
+        y  = torch.tensor(self.data[idx][3], dtype=torch.float)
         
-        return d, s1, s2, a, a1, a2, y
+        return d, si, sj, a, ai, aj, y
 
 
-class Normalize():
-    def __call__(self, sample):
-        x, y = sample
-        return (tuple(normalize(x_i, axis=1) for x_i in x), y)
-
-
-class ToTensor():
-    def __call__(self, sample):
-        x, y = sample
-        return (tuple(torch.tensor(x_i, dtype=torch.float) for x_i in x), torch.tensor(y, dtype=torch.float))
-
-
-def repeat_mean(x: torch.tensor, M: int) -> torch.tensor:
+def repeat_mean(x: list, M: int) -> np.array:
     ''' Repeats the mean of a tensor several times along the vertical axis. '''
-    x = torch.mean(x, axis=0)
-    x = x.repeat(M, 1)
+    x = np.mean(x, 0)
+    x = np.tile(x, (M, 1))
     return x
 
-def pad(x: torch.tensor, M: int) -> (torch.tensor, torch.tensor):
+
+def pad(x: list, M: int) -> (np.array, np.array):
     ''' Pads a tensor with zero-valued vectors along the vertical axis and
     creates a mask to designate the original tensor's vectors. '''
-    m, n = x.shape
-
-    p = torch.zeros(size=(M, n), dtype=torch.float)
-    p[:m,:] = x
-
-    mask = torch.zeros(size=(M, ), dtype=torch.bool)
+    m, n = len(x), len(x[0])
+    p = np.zeros((M, n), dtype=np.float)
+    p[:m] = x
+    mask = np.zeros(M, dtype=np.bool)
     mask[:m] = True
-    mask = mask.view(-1, 1)
-
     return p, mask
 
-def pad_h(x: torch.tensor, M: int) -> (torch.tensor, torch.tensor):
+
+def pad_h(x: list, M: int) -> (np.array, np.array):
     ''' Pads a tensor with zero-valued vectors along the vertical axis and
     creates the histogram for the original tensor's vectors. '''
-    m, n = x.shape
-
-    p = torch.zeros(size=(M, n), dtype=torch.float)
-    p[:m,:] = x
-
-    hist = torch.zeros(size=(M, ), dtype=torch.float)
-    hist[:m] = 1
-    hist = hist / m
-
+    m, n = len(x), len(x[0])
+    p = np.zeros((M, n), dtype=np.float)
+    p[:m] = x
+    hist = np.zeros(M, dtype=np.float)
+    hist[:m] = 1.0 / m
     return p, hist
-
-
-class Expand(): 
-    def __init__(self, M):
-        self.M = M
-
-    def __call__(self, sample):
-        (d, s1, s2), y = sample
-
-        d = repeat_mean(d, self.M)
-        s1, m1 = pad(s1, self.M)
-        s2, m2 = pad(s2, self.M)
-
-        return d, s1, s2, m1, m2, y

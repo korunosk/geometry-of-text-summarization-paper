@@ -70,7 +70,7 @@ def load_embedded_item(embedding_method, dataset_id, layer, topic_id, item_id):
         directory = os.path.join(directory, str(layer))
     directory = os.path.join(directory, topic_id)
     fname = os.path.join(directory, item_id) + '.npy'
-    return np.load(fname)
+    return np.load(fname, allow_pickle=True)
 
 
 def save_embedded_item(embedding_method, dataset_id, layer, topic_id, item_id, item):
@@ -86,7 +86,7 @@ def save_embedded_item(embedding_method, dataset_id, layer, topic_id, item_id, i
 
 def load_train_data(dataset_id, item_id):
     fname = os.path.join(DATA_DIR, dataset_id, item_id) + '.npy'
-    return np.load(fname)
+    return np.load(fname, allow_pickle=True)
 
 
 def save_train_data(dataset_id, item_id, item):

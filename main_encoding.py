@@ -51,5 +51,5 @@ if __name__ == '__main__':
             print('\t{}'.format(topic_id))
 
             topic = dataset[topic_id]
-            topic_embedded = embedd_topic(topic, encode)
+            topic_embedded = embed_topic(topic, encode)
             save_embedded_topic(embedding_method, dataset_id, layer, topic_id, topic_embedded)
