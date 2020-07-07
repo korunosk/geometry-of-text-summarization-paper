@@ -17,7 +17,52 @@ from src.config import *
 from src.config_models import *
 
 
-def train_model_1_batch(embedding_method, dataset_id, **kwargs):
+def accuracy(forward, dataset, val, batch_size_val=BATCH_SIZE_VAL):
+    dataset_val = TACDatasetLoadedClassification(dataset, val)
+    data_loader_val = DataLoader(dataset_val, batch_size=batch_size_val, shuffle=True)
+
+    auc = 0.0
+
+    for i, batch in enumerate(data_loader_val):
+        *_, y = batch
+
+        y_hat = forward(batch).squeeze()
+        
+        y_hat = (y_hat > 0.5).type(torch.bool)
+
+        auc += torch.sum(y_hat == y.type(torch.bool).to(DEVICE1)).type(torch.float)
+    
+    return auc.cpu().numpy() / len(dataset_val)
+
+
+def load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summaries):
+    def transform_documents(document_embs):
+        document_embs_, hist_ = pad_h(document_embs, 650)
+        return {
+            'embs': document_embs_,
+            'aux': hist_
+        }
+    def transform_summaries(summary_embs):
+        summary_embs_, hist_ = pad_h(summary_embs, 15)
+        return {
+            'embs': summary_embs_,
+            'aux': hist_
+        }
+    dataset = defaultdict(defaultdict)
+    for topic_id in TOPIC_IDS[dataset_id]:
+        topic = load_embedded_topic(embedding_method, dataset_id, layer, topic_id)
+        document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
+        document_embs = torch.tensor(document_embs, dtype=torch.float)
+        summary_embs = torch.tensor(summary_embs, dtype=torch.float)
+        dataset[topic_id]['documents'] = transform_documents(document_embs)
+        for i, idx in enumerate(indices):
+            dataset[topic_id]['summary_{}'.format(summary_ids[i])] = \
+                transform_summaries(summary_embs[idx[0]:idx[1]])
+    return dataset
+     
+
+
+def train_model_1(embedding_method, dataset_id, **kwargs):
     config = CONFIG_MODELS['NNRougeRegModel']
 
     data = load_train_data(dataset_id, 'regression_rouge')
@@ -28,28 +73,31 @@ def train_model_1_batch(embedding_method, dataset_id, **kwargs):
     dataset = TACDatasetRegressionRouge(embedding_method, dataset_id, train, **kwargs)
     data_loader = DataLoader(dataset, batch_size=config['batch_size'], shuffle=True)
 
-    model = NNRougeRegModel(config).to(device=device)
+    model = NNRougeRegModel(config).to(DEVICE1)
 
     criterion = nn.MSELoss()
-    optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
+    optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
 
     loss = []
 
-    for batch in data_loader:
-        (s, ), y = transform(batch)
+    for epoch in range(config['epochs']):
+        print(f'Epoch: {epoch + 1}')
 
-        y_hat = model(s.to(device=device))
-        y = -torch.log(y + 0.00001).to(device=device)
+        for batch in data_loader:
+            (s, ), y = transform(batch)
 
-        L = criterion(y_hat, y)
+            y_hat = model(s.to(DEVICE1))
 
-        L.backward()
-        optimizer.step()
-        optimizer.zero_grad()
+            L = criterion(y_hat, -torch.log(y + 1e-8).to(DEVICE1))
 
-        loss.append(L.item())
+            L.backward()
+            optimizer.step()
+            optimizer.zero_grad()
 
-        print(f'Train Loss: {loss[-1]:.4f}')
+            loss.append(L.item())
+
+            if i % 10 == 0:
+                print(f'\tTrain Loss: {loss[-1]:.4f}')
 
     save_model(embedding_method, dataset_id, 'nn_rouge_reg_model', model)
 
@@ -66,101 +114,37 @@ def train_model_2(embedding_method, dataset_id, **kwargs):
     train, val = stratified_sampling(data)
     print(len(train), len(val))
 
-    transform = transforms.Compose([ToTensor()])
-    dataset = TACDatasetClassification(embedding_method, dataset_id, train, **kwargs)
-    data_loader = DataLoader(dataset, batch_size=config['batch_size'], shuffle=True, collate_fn=lambda x: x)
-
-    model = NNWAvgPRModel(config).to(device=device)
-
-    criterion = nn.BCELoss()
-    optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
-
-    loss = []
-
-    for batch in data_loader:
-
-        for sample in batch:
-            (d, s1, s2), y = transform(sample)
-            
-            y_hat = model(d.to(device=device),
-                          s1.to(device=device),
-                          s2.to(device=device))
-            
-            L = criterion(y_hat, y.to(device=device))
-            
-            L.backward()
-            
-            loss.append(L.item())
-            
-        optimizer.step()
-        optimizer.zero_grad()
-
-        print(f'Train Loss: {loss[-1]:4f}')
-
-    save_model(embedding_method, dataset_id, 'nn_wavg_pr_model', model)
-
-    n = config['batch_size']
-    loss = [sum(loss[i:i+n])/n for i in range(0,len(loss),n)]
-
-    # fig = plt.figure(figsize=(10,5))
-    # ax = fig.add_subplot(1,1,1)
-    # plot_loss(ax, loss)
-    # plt.show()
-
-
-def train_model_2_batch(embedding_method, dataset_id, **kwargs):
-    def evaluate(model, dataset, val):
-        dataset_val = TACDatasetLoadedClassification(dataset, val)
-        data_loader_val = DataLoader(dataset_val, batch_size=BATCH_SIZE_VAL, shuffle=True)
-
-        auc = 0.0
-
-        for i, batch in enumerate(data_loader_val):
-            d, s1, s2, m1, m2, y = batch
-
-            y_hat = model(d.to(device=device),
-                          s1.to(device=device),
-                          s2.to(device=device),
-                          m1.to(device=device),
-                          m2.to(device=device))
-
-            y_hat = y_hat.squeeze()
-
-            y_hat = y_hat > 0.5
-
-            auc += torch.sum(y_hat == y.to(device=device)).type(torch.float)
-        
-        return auc.cpu().numpy() / len(dataset_val)
-
-    config = CONFIG_MODELS['NNWAvgPRModel']
-
-    data = load_train_data(dataset_id, 'classification')
-    train, val = stratified_sampling(data)
-    print(len(train), len(val))
-
-    # transform = transforms.Compose([ToTensor(), Expand(20)])
-    # dataset_train = TACDatasetClassification(embedding_method, dataset_id, train, transform=transform, **kwargs)
-
     dataset = defaultdict(defaultdict)
     for topic_id in TOPIC_IDS[dataset_id]:
         topic = load_embedded_topic(embedding_method, dataset_id, topic_id, **kwargs)
         document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
         document_embs = torch.tensor(document_embs, dtype=torch.float)
         summary_embs = torch.tensor(summary_embs, dtype=torch.float)
-        dataset[topic_id]['document_embs'] = repeat_mean(document_embs, 150)
-        dataset[topic_id]['aux'] = None
+        dataset[topic_id]['document_embs'] = repeat_mean(document_embs, 15)
+        dataset[topic_id]['aux'] = torch.tensor([])
         for i, idx in enumerate(indices):
-            summary_embs_, mask_ = pad(summary_embs[idx[0]:idx[1]], 150)
+            summary_embs_, mask_ = pad(summary_embs[idx[0]:idx[1]], 15)
             dataset[topic_id]['summary_{}_embs'.format(summary_ids[i])] = summary_embs_
             dataset[topic_id]['aux_{}'.format(summary_ids[i])] = mask_
     
     dataset_train = TACDatasetLoadedClassification(dataset, train)
     data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-    model = NNWAvgPRBatchModel(config).to(device=device)
+    model = NNWAvgPRModel(config).to(DEVICE1)
 
     criterion = nn.BCELoss()
     optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+
+    def forward(batch):
+        d, s1, s2, m, m1, m2, _ = batch
+
+        return model(
+            d.to(DEVICE1),
+            s1.to(DEVICE1),
+            s2.to(DEVICE1),
+            m1.to(DEVICE1),
+            m2.to(DEVICE1)
+        )
 
     loss = []
 
@@ -168,17 +152,11 @@ def train_model_2_batch(embedding_method, dataset_id, **kwargs):
         print(f'Epoch: {epoch + 1}')
 
         for i, batch in enumerate(data_loader_train):
-            d, s1, s2, _, m1, m2, y = batch
+            *_, y = batch
 
-            y_hat = model(d.to(device=device),
-                          s1.to(device=device),
-                          s2.to(device=device),
-                          m1.to(device=device),
-                          m2.to(device=device))
+            y_hat = forward(batch).squeeze()
 
-            y_hat = y_hat.squeeze()
-
-            L = criterion(y_hat, y.to(device=device))
+            L = criterion(y_hat, y.to(DEVICE1))
 
             L.backward()
             optimizer.step()
@@ -190,7 +168,7 @@ def train_model_2_batch(embedding_method, dataset_id, **kwargs):
                 print(f'\tTrain Loss: {loss[-1]:.4f}')
         
         with torch.no_grad():
-            print(f'AUC: {evaluate(model, dataset, val):.4f}')
+            print(f'AUC: {accuracy(forward, dataset, val):.4f}')
 
     save_model(embedding_method, dataset_id, 'nn_wavg_pr_model', model)
 
@@ -201,48 +179,75 @@ def train_model_2_batch(embedding_method, dataset_id, **kwargs):
 
 
 def train_model_3(embedding_method, dataset_id, **kwargs):
-    config = CONFIG_MODELS['LinSinkhornRegModel']
+    pass
 
-    data = load_train_data(dataset_id, 'regression')
+
+def train_model_4(embedding_method, dataset_id, **kwargs):
+    config = CONFIG_MODELS['LinSinkhornPRModel']
+
+    data = load_train_data(dataset_id, 'classification')
     train, val = stratified_sampling(data)
     print(len(train), len(val))
 
-    transform = transforms.Compose([Normalize(), ToTensor()])
-    dataset = TACDatasetRegression(embedding_method, dataset_id, train, **kwargs)
-    data_loader = DataLoader(dataset, batch_size=config['batch_size'], shuffle=True, collate_fn=lambda x: x)
+    dataset = defaultdict(defaultdict)
+    for topic_id in TOPIC_IDS[dataset_id]:
+        topic = load_embedded_topic(embedding_method, dataset_id, topic_id)
+        document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
+        document_embs = torch.tensor(document_embs, dtype=torch.float)
+        summary_embs = torch.tensor(summary_embs, dtype=torch.float)
+        document_embs_, hist_ = pad_h(document_embs, 650)
+        dataset[topic_id]['document_embs'] = document_embs_
+        dataset[topic_id]['aux'] = hist_
+        for i, idx in enumerate(indices):
+            summary_embs_, hist_ = pad_h(summary_embs[idx[0]:idx[1]], 15)
+            dataset[topic_id]['summary_{}_embs'.format(summary_ids[i])] = summary_embs_
+            dataset[topic_id]['aux_{}'.format(summary_ids[i])] = hist_
+    
+    dataset_train = TACDatasetLoadedClassification(dataset, train)
+    data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-    model = LinSinkhornRegModel(config).to(device=device)
+    model = LinSinkhornPRModel(config).to(DEVICE1)
 
-    criterion = nn.MSELoss()
-    optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
+    criterion = nn.BCELoss()
+    optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+
+    def forward(batch):
+        d, s1, s2, h, h1, h2, _ = batch
+
+        return model(
+            d.to(DEVICE1),
+            s1.to(DEVICE1),
+            s2.to(DEVICE1),
+            h.to(DEVICE1),
+            h1.to(DEVICE1),
+            h2.to(DEVICE1)
+        )
 
     loss = []
 
-    optimizer.zero_grad()
+    for epoch in range(config['epochs']):
+        print(f'Epoch: {epoch + 1}')
 
-    for batch in data_loader:
-        
-        for sample in batch:
-            (d, s), y = transform(sample)
-
-            y_hat = model(d.to(device=device),
-                          s.to(device=device))
+        for i, batch in enumerate(data_loader_train):
+            *_, y = batch
             
-            L = criterion(y_hat, y.to(device=device))
+            y_hat = forward(batch).squeeze()
+            
+            L = criterion(y_hat, y.to(DEVICE1))
             
             L.backward()
-            
+            optimizer.step()
+            optimizer.zero_grad()
+
             loss.append(L.item())
             
-        optimizer.step()
-        optimizer.zero_grad()
+            if i % 10 == 0:
+                print(f'\tTrain Loss: {loss[-1]:.4f}')
         
-        print(f'Train Loss: {loss[-1]:.4f}')
+        with torch.no_grad():
+            print(f'AUC: {accuracy(forward, dataset, val, 256):.4f}')
 
-    save_model(embedding_method, dataset_id, 'lin_sinkhorn_reg_model', model)
-
-    # n = config['batch_size']
-    # loss = [sum(loss[i:i+n])/n for i in range(0,len(loss),n)]
+    save_model(embedding_method, dataset_id, 'lin_sinkhorn_pr_model', model)
 
     # fig = plt.figure(figsize=(10,5))
     # ax = fig.add_subplot(1,1,1)
@@ -250,22 +255,83 @@ def train_model_3(embedding_method, dataset_id, **kwargs):
     # plt.show()
 
 
-def train_model_3_batch(embedding_method, dataset_id, **kwargs):
-    pass
+def train_model_5(embedding_method, dataset_id, **kwargs):
+    config = CONFIG_MODELS['NNSinkhornPRModel']
 
+    data = load_train_data(dataset_id, 'classification')
+    train, val = stratified_sampling(data)
+    print(len(train), len(val))
 
-def train_model_4_batch(embedding_method, dataset_id, **kwargs):
-    pass
+    dataset = defaultdict(defaultdict)
+    for topic_id in TOPIC_IDS[dataset_id]:
+        topic = load_embedded_topic(embedding_method, dataset_id, topic_id)
+        document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
+        document_embs = torch.tensor(document_embs, dtype=torch.float)
+        summary_embs = torch.tensor(summary_embs, dtype=torch.float)
+        document_embs_, hist_ = pad_h(document_embs, 650)
+        dataset[topic_id]['document_embs'] = document_embs_
+        dataset[topic_id]['aux'] = hist_
+        for i, idx in enumerate(indices):
+            summary_embs_, hist_ = pad_h(summary_embs[idx[0]:idx[1]], 15)
+            dataset[topic_id]['summary_{}_embs'.format(summary_ids[i])] = summary_embs_
+            dataset[topic_id]['aux_{}'.format(summary_ids[i])] = hist_
+    
+    dataset_train = TACDatasetLoadedClassification(dataset, train)
+    data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
+    model = NNSinkhornPRModel(config).to(DEVICE1)
 
-def train_model_5_batch(embedding_method, dataset_id, **kwargs):
-    pass
+    criterion = nn.BCELoss()
+    optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+
+    def forward(batch):
+        d, s1, s2, h, h1, h2, _ = batch
+
+        return model(
+            d.to(DEVICE1),
+            s1.to(DEVICE1),
+            s2.to(DEVICE1),
+            h.to(DEVICE1),
+            h1.to(DEVICE1),
+            h2.to(DEVICE1)
+        )
+
+    loss = []
+
+    for epoch in range(config['epochs']):
+        print(f'Epoch: {epoch + 1}')
+
+        for i, batch in enumerate(data_loader_train):
+            *_, y = batch
+            
+            y_hat = forward(batch).squeeze()
+            
+            L = criterion(y_hat, y.to(DEVICE1))
+            
+            L.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+
+            loss.append(L.item())
+            
+            if i % 10 == 0:
+                print(f'\tTrain Loss: {loss[-1]:.4f}')
+        
+        with torch.no_grad():
+            print(f'AUC: {accuracy(forward, dataset, val, 256):.4f}')
+
+    save_model(embedding_method, dataset_id, 'nn_sinkhorn_pr_model', model)
+
+    # fig = plt.figure(figsize=(10,5))
+    # ax = fig.add_subplot(1,1,1)
+    # plot_loss(ax, loss)
+    # plt.show()
 
 
 PROCEDURES = [
-    train_model_1_batch,
-    train_model_2_batch,
-    train_model_3_batch,
-    train_model_4_batch,
-    train_model_5_batch
+    train_model_1,
+    train_model_2,
+    train_model_3,
+    train_model_4,
+    train_model_5
 ]
