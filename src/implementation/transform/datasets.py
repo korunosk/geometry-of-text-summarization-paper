@@ -106,12 +106,12 @@ class TACDatasetLoadedClassification(Dataset):
         
         i1 = self.data[idx][1]
         i2 = self.data[idx][2]
-        d  = self.dataset[topic_id]['document_embs']
-        s1 = self.dataset[topic_id][f'summary_{i1}_embs']
-        s2 = self.dataset[topic_id][f'summary_{i2}_embs']
-        a  = self.dataset[topic_id]['aux']
-        a1 = self.dataset[topic_id][f'aux_{i2}']
-        a2 = self.dataset[topic_id][f'aux_{i2}']
+        d  = self.dataset[topic_id]['documents']['embs']
+        s1 = self.dataset[topic_id][f'summary_{i1}']['embs']
+        s2 = self.dataset[topic_id][f'summary_{i2}']['embs']
+        a  = self.dataset[topic_id]['documents']['aux']
+        a1 = self.dataset[topic_id][f'summary_{i1}']['aux']
+        a2 = self.dataset[topic_id][f'summary_{i2}']['aux']
         y  = torch.tensor(float(self.data[idx][3]), dtype=torch.float)
         
         return d, s1, s2, a, a1, a2, y

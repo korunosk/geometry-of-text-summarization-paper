@@ -36,18 +36,6 @@ def accuracy(forward, dataset, val, batch_size_val=BATCH_SIZE_VAL):
 
 
 def load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summaries):
-    def transform_documents(document_embs):
-        document_embs_, hist_ = pad_h(document_embs, 650)
-        return {
-            'embs': document_embs_,
-            'aux': hist_
-        }
-    def transform_summaries(summary_embs):
-        summary_embs_, hist_ = pad_h(summary_embs, 15)
-        return {
-            'embs': summary_embs_,
-            'aux': hist_
-        }
     dataset = defaultdict(defaultdict)
     for topic_id in TOPIC_IDS[dataset_id]:
         topic = load_embedded_topic(embedding_method, dataset_id, layer, topic_id)
@@ -114,18 +102,21 @@ def train_model_2(embedding_method, dataset_id, layer):
     train, val = stratified_sampling(data)
     print(len(train), len(val))
 
-    dataset = defaultdict(defaultdict)
-    for topic_id in TOPIC_IDS[dataset_id]:
-        topic = load_embedded_topic(embedding_method, dataset_id, layer, topic_id)
-        document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
-        document_embs = torch.tensor(document_embs, dtype=torch.float)
-        summary_embs = torch.tensor(summary_embs, dtype=torch.float)
-        dataset[topic_id]['document_embs'] = repeat_mean(document_embs, 15)
-        dataset[topic_id]['aux'] = torch.tensor([])
-        for i, idx in enumerate(indices):
-            summary_embs_, mask_ = pad(summary_embs[idx[0]:idx[1]], 15)
-            dataset[topic_id]['summary_{}_embs'.format(summary_ids[i])] = summary_embs_
-            dataset[topic_id]['aux_{}'.format(summary_ids[i])] = mask_
+    def transform_documents(document_embs):
+        document_embs_, mask_ = repeat_mean(document_embs, 15), torch.tensor([])
+        return {
+            'embs': document_embs_,
+            'aux': mask_
+        }
+    
+    def transform_summaries(summary_embs):
+        summary_embs_, mask_ = pad(summary_embs, 15)
+        return {
+            'embs': summary_embs_,
+            'aux': mask_
+        }
+
+    dataset = load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summaries)
     
     dataset_train = TACDatasetLoadedClassification(dataset, train)
     data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
@@ -189,19 +180,21 @@ def train_model_4(embedding_method, dataset_id, layer):
     train, val = stratified_sampling(data)
     print(len(train), len(val))
 
-    dataset = defaultdict(defaultdict)
-    for topic_id in TOPIC_IDS[dataset_id]:
-        topic = load_embedded_topic(embedding_method, dataset_id, topic_id)
-        document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
-        document_embs = torch.tensor(document_embs, dtype=torch.float)
-        summary_embs = torch.tensor(summary_embs, dtype=torch.float)
+    def transform_documents(document_embs):
         document_embs_, hist_ = pad_h(document_embs, 650)
-        dataset[topic_id]['document_embs'] = document_embs_
-        dataset[topic_id]['aux'] = hist_
-        for i, idx in enumerate(indices):
-            summary_embs_, hist_ = pad_h(summary_embs[idx[0]:idx[1]], 15)
-            dataset[topic_id]['summary_{}_embs'.format(summary_ids[i])] = summary_embs_
-            dataset[topic_id]['aux_{}'.format(summary_ids[i])] = hist_
+        return {
+            'embs': document_embs_,
+            'aux': hist_
+        }
+    
+    def transform_summaries(summary_embs):
+        summary_embs_, hist_ = pad_h(summary_embs, 15)
+        return {
+            'embs': summary_embs_,
+            'aux': hist_
+        }
+
+    dataset = load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summaries)
     
     dataset_train = TACDatasetLoadedClassification(dataset, train)
     data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
@@ -262,19 +255,21 @@ def train_model_5(embedding_method, dataset_id, layer):
     train, val = stratified_sampling(data)
     print(len(train), len(val))
 
-    dataset = defaultdict(defaultdict)
-    for topic_id in TOPIC_IDS[dataset_id]:
-        topic = load_embedded_topic(embedding_method, dataset_id, topic_id)
-        document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
-        document_embs = torch.tensor(document_embs, dtype=torch.float)
-        summary_embs = torch.tensor(summary_embs, dtype=torch.float)
+    def transform_documents(document_embs):
         document_embs_, hist_ = pad_h(document_embs, 650)
-        dataset[topic_id]['document_embs'] = document_embs_
-        dataset[topic_id]['aux'] = hist_
-        for i, idx in enumerate(indices):
-            summary_embs_, hist_ = pad_h(summary_embs[idx[0]:idx[1]], 15)
-            dataset[topic_id]['summary_{}_embs'.format(summary_ids[i])] = summary_embs_
-            dataset[topic_id]['aux_{}'.format(summary_ids[i])] = hist_
+        return {
+            'embs': document_embs_,
+            'aux': hist_
+        }
+    
+    def transform_summaries(summary_embs):
+        summary_embs_, hist_ = pad_h(summary_embs, 15)
+        return {
+            'embs': summary_embs_,
+            'aux': hist_
+        }
+
+    dataset = load_dataset(embedding_method, dataset_id, layer, transform_documents, transform_summaries)
     
     dataset_train = TACDatasetLoadedClassification(dataset, train)
     data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
