@@ -33,31 +33,6 @@ class NNWAvgPRModel(nn.Module):
         self.layer1 = nn.Linear(self.config['D_in'], self.config['D_out'])
         self.layer2 = nn.Linear(self.config['H'], 1)
         self.sigm = nn.Sigmoid()
-    
-    def transform(self, x):
-        return F.relu(self.layer1(x))
-    
-    def predict(self, d, s):
-        n = s.shape[0]
-        d = d.mean(axis=0).repeat(n, 1)
-        x = torch.cat((self.transform(d), self.transform(s)), axis=1)
-        z = self.layer2(x)
-        return torch.sum(z)
-    
-    def forward(self, d, s1, s2):
-        score1 = self.predict(d, s1)
-        score2 = self.predict(d, s2)
-        return self.sigm(self.config['scaling_factor'] * (score1 - score2))
-
-
-class NNWAvgPRBatchModel(nn.Module):
-
-    def __init__(self, config):
-        super(NNWAvgPRBatchModel, self).__init__()
-        self.config = config
-        self.layer1 = nn.Linear(self.config['D_in'], self.config['D_out'])
-        self.layer2 = nn.Linear(self.config['H'], 1)
-        self.sigm = nn.Sigmoid()
 
     def transform(self, x):
         return F.relu(self.layer1(x))
@@ -82,13 +57,13 @@ class LinSinkhornRegModel(nn.Module):
         self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
     
     def transform(self, x):
-        return torch.mm(x, self.M)
+        return torch.mm(x, self.M.unsqueeze(0).expand(x.shape[0], -1, -1))
 
-    def predict(self, d, s):
-        return self.sinkhorn(self.transform(d), self.transform(s))
+    def predict(self, d, s, h, ds):
+        return self.sinkhorn(h, self.transform(d), hs, self.transform(s))
 
-    def forward(self, d, s):
-        return torch.exp(-self.predict(d, s))
+    def forward(self, d, s, h, hs):
+        return torch.exp(-self.predict(d, s, h, hs))
 
 
 class LinSinkhornPRModel(nn.Module):
@@ -101,14 +76,14 @@ class LinSinkhornPRModel(nn.Module):
         self.sigm = nn.Sigmoid()
     
     def transform(self, x):
-        return torch.mm(x, self.M)
+        return torch.bmm(x, self.M.unsqueeze(0).expand(x.shape[0], -1, -1))
 
-    def predict(self, d, s):
-        return self.sinkhorn(self.transform(d), self.transform(s))
+    def predict(self, d, s, h, hs):
+        return self.sinkhorn(h, self.transform(d), hs, self.transform(s))
 
-    def forward(self, d, s1, s2):
-        dist1 = self.predict(d, s1)
-        dist2 = self.predict(d, s2)
+    def forward(self, d, s1, s2, h, h1, h2):
+        dist1 = self.predict(d, s1, h, h1)
+        dist2 = self.predict(d, s2, h, h2)
         return self.sigm(self.config['scaling_factor'] * (dist2 - dist1))
 
 
@@ -124,10 +99,10 @@ class NNSinkhornPRModel(nn.Module):
     def transform(self, x):
         return F.relu(self.layer(x))
     
-    def predict(self, d, s):
-        return self.sinkhorn(self.transform(d), self.transform(s))
+    def predict(self, d, s, h, hs):
+        return self.sinkhorn(h, self.transform(d), hs, self.transform(s))
 
-    def forward(self, d, s1, s2):
-        dist1 = self.predict(d, s1)
-        dist2 = self.predict(d, s2)
+    def forward(self, d, s1, s2, h, h1, h2):
+        dist1 = self.predict(d, s1, h, h1)
+        dist2 = self.predict(d, s2, h, h2)
         return self.sigm(self.config['scaling_factor'] * (dist2 - dist1))
