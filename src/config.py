@@ -8,7 +8,16 @@ PUNCTUATION = list(string.punctuation)
 RANDOM_STATE = 42
 
 EPOCHS = 10
-BATCH_SIZE_VAL = 1000
+BATCH_SIZE_VAL = 1024
+
+EMBEDDING_METHODS = [
+    'LSA',
+    'GloVe',
+    'fasttext',
+    'BERT_word',
+    'BERT_sent',
+    'BART_word'
+]
 
 DATASET_IDS = [
     'TAC2008',
@@ -41,15 +50,6 @@ TOPIC_IDS = {
     ]
 }
 
-EMBEDDING_METHODS = [
-    'LSA',
-    'GloVe',
-    'fasttext',
-    'BERT_word',
-    'BERT_sent',
-    'BART_word'
-]
-
 BASE_DATA_DIR   = '/scratch/korunosk/data_paper'
 
 EMBEDDINGS_DIR  = os.path.join(BASE_DATA_DIR, 'embeddings')
@@ -61,4 +61,5 @@ PLOTS_DIR       = os.path.join(BASE_DATA_DIR, 'plots')
 import torch
 
 torch.manual_seed(RANDOM_STATE)
-device = torch.device('cuda:1')
+DEVICE0 = torch.device('cuda:0')
+DEVICE1 = torch.device('cuda:1')
