@@ -20,17 +20,17 @@ from src.config import *
 
 
 # models = [
-    # load_model(embedding_method, dataset_id, 'nn_rouge_reg_model', NNRougeRegModel, CONFIG_MODELS['NNRougeRegModel']).to(device=device),
-    # load_model(embedding_method, dataset_id, 'nn_wavg_pr_model', NNWAvgPRModel, CONFIG_MODELS['NNWAvgPRModel']).to(device=device),
-    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, CONFIG_MODELS['LinSinkhornRegModel']).to(device=device),
-    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, CONFIG_MODELS['LinSinkhornPRModel']).to(device=device),
-    # load_model(embedding_method, dataset_id, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, CONFIG_MODELS['NNSinkhornPRModel']).to(device=device),
+    # load_model(embedding_method, dataset_id, 'nn_rouge_reg_model', NNRougeRegModel, CONFIG_MODELS['NNRougeRegModel']).to(DEVICE1),
+    # load_model(embedding_method, dataset_id, 'nn_wavg_pr_model', NNWAvgPRModel, CONFIG_MODELS['NNWAvgPRModel']).to(DEVICE1),
+    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, CONFIG_MODELS['LinSinkhornRegModel']).to(DEVICE1),
+    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, CONFIG_MODELS['LinSinkhornPRModel']).to(DEVICE1),
+    # load_model(embedding_method, dataset_id, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, CONFIG_MODELS['NNSinkhornPRModel']).to(DEVICE1),
 # ]
 
 
 # def transform(x):
 #     return models[0].transform(
-#         torch.tensor(x, dtype=torch.float).to(device=device)
+#         torch.tensor(x, dtype=torch.float).to(DEVICE1)
 #     ).data.cpu().numpy().tolist()
 
 def transform(x):
