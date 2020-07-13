@@ -1,7 +1,15 @@
 import rouge
-
-from src.util.helpers import *
-from src.config import *
+from gensim.parsing.preprocessing import preprocess_string
+from src.util.encoders import FILTERS
+from src.util.helpers import (
+    load_dataset,
+    extract_topic_data
+)
+from src.util.loaders import save_rouge_scores
+from src.config import (
+    DATASET_IDS,
+    TOPIC_IDS
+)
 
 
 if __name__ == '__main__':
@@ -28,6 +36,8 @@ if __name__ == '__main__':
             reference_summaries = summaries[indices[-4][0]:indices[-1][1]]
 
             for i in range(len(documents)):
+                if not preprocess_string(documents[i]):
+                    continue
                 r = evaluator.get_scores(documents[i], reference_summaries)['rouge-2']['r']
                 scores[topic_id].append(r)
         

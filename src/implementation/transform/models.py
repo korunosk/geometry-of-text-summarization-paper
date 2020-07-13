@@ -12,8 +12,8 @@ class NNRougeRegModel(nn.Module):
     def __init__(self, config):
         super(NNRougeRegModel, self).__init__()
         self.config = config
-        self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
         self.layer = nn.Linear(self.config['D_in'], self.config['D_out'])
+        self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
 
     def transform(self, x):
         return F.relu(self.layer(x))
@@ -53,11 +53,11 @@ class LinSinkhornRegModel(nn.Module):
     def __init__(self, config):
         super(LinSinkhornRegModel, self).__init__()
         self.config = config
-        self.M = nn.Parameter(torch.randn(self.config['D_in'], self.config['D_out']))
+        self.layer = nn.Linear(self.config['D_in'], self.config['D_out'], bias=False)
         self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
     
     def transform(self, x):
-        return torch.bmm(x, self.M.unsqueeze(0).expand(x.shape[0], -1, -1))
+        return self.layer(x)
 
     def predict(self, d, si, h, hi):
         return self.sinkhorn(h, self.transform(d), hi, self.transform(si))
@@ -71,12 +71,12 @@ class LinSinkhornPRModel(nn.Module):
     def __init__(self, config):
         super(LinSinkhornPRModel, self).__init__()
         self.config = config
-        self.M = nn.Parameter(torch.randn(self.config['D_in'], self.config['D_out']))
+        self.layer = nn.Linear(self.config['D_in'], self.config['D_out'], bias=False)
         self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
         self.sigm = nn.Sigmoid()
     
     def transform(self, x):
-        return torch.bmm(x, self.M.unsqueeze(0).expand(x.shape[0], -1, -1))
+        return self.layer(x)
 
     def predict(self, d, si, h, hi):
         return self.sinkhorn(h, self.transform(d), hi, self.transform(si))
@@ -92,8 +92,8 @@ class NNSinkhornPRModel(nn.Module):
     def __init__(self, config):
         super(NNSinkhornPRModel, self).__init__()
         self.config = config
-        self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
         self.layer = nn.Linear(self.config['D_in'], self.config['D_out'])
+        self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
         self.sigm = nn.Sigmoid()
     
     def transform(self, x):
