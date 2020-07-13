@@ -2,7 +2,9 @@
 import argparse
 
 from scipy.stats import kendalltau
-import src.training.stratified.procedures as stratified
+import src.training.stratified as stratified
+import src.training.crossval as crossval 
+assert(len(stratified.PROCEDURES) == len(crossval.PROCEDURES))
 
 from src.util.helpers import *
 from src.config import *
@@ -34,13 +36,20 @@ if __name__ == '__main__':
                         type=int,
                         choices=range(1, 13))
     
-    desc = ', '.join([ '{} - {}'.format(i, procedure.__name__) for i, procedure in enumerate(stratified.PROCEDURES) ])
+    desc = ', '.join([ '{} - {}'.format(i + 1, procedure.__name__) for i, procedure in enumerate(stratified.PROCEDURES) ])
 
     parser.add_argument('-p',
                         dest='procedure',
                         help='Train procedure: {}'.format(desc),
                         type=int,
                         choices=range(1, len(stratified.PROCEDURES) + 1))
+    
+    parser.add_argument('-cv',
+                        dest='crossval',
+                        help='Cross-validate',
+                        type=bool,
+                        nargs='?',
+                        const=True)
     
     args = parser.parse_args()
 
@@ -63,7 +72,11 @@ if __name__ == '__main__':
     
     embedding_method = EMBEDDING_METHODS[args.embedding_method]
     dataset_id = DATASET_IDS[args.dataset_id]
+
     procedure = stratified.PROCEDURES[args.procedure - 1]
+    if args.crossval:
+        print('Cross-validating!')
+        procedure = crossval.PROCEDURES[args.procedure - 1]
 
     print(embedding_method, dataset_id, procedure.__name__)
 
