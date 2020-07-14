@@ -35,10 +35,10 @@ if __name__ == '__main__':
             documents, summaries, indices, pyr_scores, summary_ids = extract_topic_data(topic)
             reference_summaries = summaries[indices[-4][0]:indices[-1][1]]
 
-            for i in range(len(documents)):
-                if not preprocess_string(documents[i]):
+            for sentence in documents:
+                if not preprocess_string(sentence, FILTERS):
                     continue
-                r = evaluator.get_scores(documents[i], reference_summaries)['rouge-2']['r']
+                r = evaluator.get_scores(sentence, reference_summaries)['rouge-2']['r']
                 scores[topic_id].append(r)
         
         save_rouge_scores(dataset_id, scores)
