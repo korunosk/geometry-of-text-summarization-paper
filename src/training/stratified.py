@@ -14,7 +14,7 @@ def train_model_1(embedding_method, dataset_id, layer):
     trainer = ModelTrainer(embedding_method, dataset_id, layer)
     model = trainer.train_nn_rouge_reg_model(train, val)
 
-    # save_model(embedding_method, dataset_id, layer, 'nn_rouge_reg_model', model)
+    save_model(embedding_method, dataset_id, layer, 'nn_rouge_reg_model', model)
 
 
 def train_model_2(embedding_method, dataset_id, layer):
@@ -25,7 +25,7 @@ def train_model_2(embedding_method, dataset_id, layer):
     trainer = ModelTrainer(embedding_method, dataset_id, layer)
     model = trainer.train_nn_wavg_pr_model(train, val)
 
-    # save_model(embedding_method, dataset_id, layer, 'nn_wavg_pr_model', model)
+    save_model(embedding_method, dataset_id, layer, 'nn_wavg_pr_model', model)
 
 
 def train_model_3(embedding_method, dataset_id, layer):
@@ -36,7 +36,7 @@ def train_model_3(embedding_method, dataset_id, layer):
     trainer = ModelTrainer(embedding_method, dataset_id, layer)
     model = trainer.train_lin_sinkhorn_reg_model(train, val)
 
-    # save_model(embedding_method, dataset_id, layer, 'lin_sinkhorn_reg_model', model)
+    save_model(embedding_method, dataset_id, layer, 'lin_sinkhorn_reg_model', model)
 
 
 def train_model_4(embedding_method, dataset_id, layer):
@@ -47,7 +47,7 @@ def train_model_4(embedding_method, dataset_id, layer):
     trainer = ModelTrainer(embedding_method, dataset_id, layer)
     model = trainer.train_lin_sinkhorn_pr_model(train, val)
 
-    # save_model(embedding_method, dataset_id, layer, 'lin_sinkhorn_pr_model', model)
+    save_model(embedding_method, dataset_id, layer, 'lin_sinkhorn_pr_model', model)
 
 
 def train_model_5(embedding_method, dataset_id, layer):
@@ -58,7 +58,7 @@ def train_model_5(embedding_method, dataset_id, layer):
     trainer = ModelTrainer(embedding_method, dataset_id, layer)
     model = trainer.train_nn_sinkhorn_pr_model(train, val)
 
-    # save_model(embedding_method, dataset_id, layer, 'nn_sinkhorn_pr_model', model)
+    save_model(embedding_method, dataset_id, layer, 'nn_sinkhorn_pr_model', model)
 
 
 PROCEDURES = [
