@@ -12,7 +12,7 @@ class NNRougeRegModel(nn.Module):
     def __init__(self, config):
         super(NNRougeRegModel, self).__init__()
         self.config = config
-        self.layer = nn.Linear(self.config['D_in'], self.config['D_out'])
+        self.layer = nn.Linear(self.config['D'], self.config['D'])
         self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
 
     def transform(self, x):
@@ -30,7 +30,7 @@ class NNWAvgPRModel(nn.Module):
     def __init__(self, config):
         super(NNWAvgPRModel, self).__init__()
         self.config = config
-        self.layer1 = nn.Linear(self.config['D_in'], self.config['D_out'])
+        self.layer1 = nn.Linear(self.config['D'], self.config['D'])
         self.layer2 = nn.Linear(self.config['H'], 1)
         self.sigm = nn.Sigmoid()
 
@@ -53,7 +53,7 @@ class LinSinkhornRegModel(nn.Module):
     def __init__(self, config):
         super(LinSinkhornRegModel, self).__init__()
         self.config = config
-        self.layer = nn.Linear(self.config['D_in'], self.config['D_out'], bias=False)
+        self.layer = nn.Linear(self.config['D'], self.config['D'], bias=False)
         self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
     
     def transform(self, x):
@@ -71,7 +71,7 @@ class LinSinkhornPRModel(nn.Module):
     def __init__(self, config):
         super(LinSinkhornPRModel, self).__init__()
         self.config = config
-        self.layer = nn.Linear(self.config['D_in'], self.config['D_out'], bias=False)
+        self.layer = nn.Linear(self.config['D'], self.config['D'], bias=False)
         self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
         self.sigm = nn.Sigmoid()
     
@@ -92,7 +92,7 @@ class NNSinkhornPRModel(nn.Module):
     def __init__(self, config):
         super(NNSinkhornPRModel, self).__init__()
         self.config = config
-        self.layer = nn.Linear(self.config['D_in'], self.config['D_out'])
+        self.layer = nn.Linear(self.config['D'], self.config['D'])
         self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
         self.sigm = nn.Sigmoid()
     
