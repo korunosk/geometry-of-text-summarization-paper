@@ -16,6 +16,9 @@ from src.config import *
 from src.config_models import *
 
 
+DEVICE = DEVICE0
+
+
 class ModelTrainer():
 
     def accuracy(self, forward, dataset_val, batch_size_val=BATCH_SIZE_VAL):
@@ -30,7 +33,7 @@ class ModelTrainer():
             
             y_hat = (y_hat > 0.5).type(torch.bool)
 
-            auc += torch.sum(y_hat == y.type(torch.bool).to(DEVICE1)).type(torch.float)
+            auc += torch.sum(y_hat == y.type(torch.bool).to(DEVICE)).type(torch.float)
         
         return auc.cpu().numpy() / len(dataset_val)
     
@@ -44,7 +47,7 @@ class ModelTrainer():
 
             y_hat = forward(batch)
             
-            mse += torch.sum(torch.pow(y_hat - y.to(DEVICE1), 2))
+            mse += torch.sum(torch.pow(y_hat - y.to(DEVICE), 2))
         
         return np.sqrt(mse.cpu().numpy() / len(dataset_val))
 
@@ -80,7 +83,7 @@ class ModelTrainer():
         dataset_train = TACDatasetRegressionRouge(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-        model = NNRougeRegModel(config).to(DEVICE1)
+        model = NNRougeRegModel(config).to(DEVICE)
 
         criterion = nn.MSELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
@@ -88,7 +91,7 @@ class ModelTrainer():
         def forward(batch):
             e, y = batch
 
-            return model(e.to(DEVICE1))
+            return model(e.to(DEVICE))
 
         loss = []
 
@@ -100,7 +103,7 @@ class ModelTrainer():
 
                 y_hat = forward(batch)
 
-                L = criterion(y_hat, -torch.log(y + 1e-8).to(DEVICE1))
+                L = criterion(y_hat, -torch.log(y + 1e-8).to(DEVICE))
 
                 L.backward()
                 optimizer.step()
@@ -143,7 +146,7 @@ class ModelTrainer():
         dataset_train = TACDatasetClassification(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-        model = NNWAvgPRModel(config).to(DEVICE1)
+        model = NNWAvgPRModel(config).to(DEVICE)
 
         criterion = nn.BCELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
@@ -152,11 +155,11 @@ class ModelTrainer():
             d, si, sj, m, mi, mj, y = batch
 
             return model(
-                d.to(DEVICE1),
-                si.to(DEVICE1),
-                sj.to(DEVICE1),
-                mi.to(DEVICE1),
-                mj.to(DEVICE1)
+                d.to(DEVICE),
+                si.to(DEVICE),
+                sj.to(DEVICE),
+                mi.to(DEVICE),
+                mj.to(DEVICE)
             )
 
         loss = []
@@ -169,7 +172,7 @@ class ModelTrainer():
 
                 y_hat = forward(batch)
 
-                L = criterion(y_hat, y.to(DEVICE1))
+                L = criterion(y_hat, y.to(DEVICE))
 
                 L.backward()
                 optimizer.step()
@@ -212,7 +215,7 @@ class ModelTrainer():
         dataset_train = TACDatasetRegression(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-        model = LinSinkhornRegModel(config).to(DEVICE1)
+        model = LinSinkhornRegModel(config).to(DEVICE)
 
         criterion = nn.MSELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
@@ -221,10 +224,10 @@ class ModelTrainer():
             d, si, h, hi, y = batch
 
             return model(
-                d.to(DEVICE1),
-                si.to(DEVICE1),
-                h.to(DEVICE1),
-                hi.to(DEVICE1),
+                d.to(DEVICE),
+                si.to(DEVICE),
+                h.to(DEVICE),
+                hi.to(DEVICE),
             )
 
         loss = []
@@ -237,7 +240,7 @@ class ModelTrainer():
                 
                 y_hat = forward(batch)
                 
-                L = criterion(y_hat, y.to(DEVICE1))
+                L = criterion(y_hat, y.to(DEVICE))
                 
                 L.backward()
                 optimizer.step()
@@ -280,7 +283,7 @@ class ModelTrainer():
         dataset_train = TACDatasetClassification(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-        model = LinSinkhornPRModel(config).to(DEVICE1)
+        model = LinSinkhornPRModel(config).to(DEVICE)
 
         criterion = nn.BCELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
@@ -289,12 +292,12 @@ class ModelTrainer():
             d, si, sj, h, hi, hj, y = batch
 
             return model(
-                d.to(DEVICE1),
-                si.to(DEVICE1),
-                sj.to(DEVICE1),
-                h.to(DEVICE1),
-                hi.to(DEVICE1),
-                hj.to(DEVICE1)
+                d.to(DEVICE),
+                si.to(DEVICE),
+                sj.to(DEVICE),
+                h.to(DEVICE),
+                hi.to(DEVICE),
+                hj.to(DEVICE)
             )
 
         loss = []
@@ -307,7 +310,7 @@ class ModelTrainer():
                 
                 y_hat = forward(batch)
                 
-                L = criterion(y_hat, y.to(DEVICE1))
+                L = criterion(y_hat, y.to(DEVICE))
                 
                 L.backward()
                 optimizer.step()
@@ -350,7 +353,7 @@ class ModelTrainer():
         dataset_train = TACDatasetClassification(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-        model = NNSinkhornPRModel(config).to(DEVICE1)
+        model = NNSinkhornPRModel(config).to(DEVICE)
 
         criterion = nn.BCELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
@@ -359,12 +362,12 @@ class ModelTrainer():
             d, si, sj, h, hi, hj, y = batch
 
             return model(
-                d.to(DEVICE1),
-                si.to(DEVICE1),
-                sj.to(DEVICE1),
-                h.to(DEVICE1),
-                hi.to(DEVICE1),
-                hj.to(DEVICE1)
+                d.to(DEVICE),
+                si.to(DEVICE),
+                sj.to(DEVICE),
+                h.to(DEVICE),
+                hi.to(DEVICE),
+                hj.to(DEVICE)
             )
 
         loss = []
@@ -377,7 +380,7 @@ class ModelTrainer():
                 
                 y_hat = forward(batch)
                 
-                L = criterion(y_hat, y.to(DEVICE1))
+                L = criterion(y_hat, y.to(DEVICE))
                 
                 L.backward()
                 optimizer.step()
