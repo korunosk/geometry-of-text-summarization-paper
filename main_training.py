@@ -1,13 +1,15 @@
 
+import time
 import argparse
-
-from scipy.stats import kendalltau
+import src.training.crossval as crossval
 import src.training.stratified as stratified
-import src.training.crossval as crossval 
-assert(len(stratified.PROCEDURES) == len(crossval.PROCEDURES))
+from scipy.stats import kendalltau
+from src.config import (
+    EMBEDDING_METHODS,
+    DATASET_IDS
+)
 
-from src.util.helpers import *
-from src.config import *
+assert(len(stratified.PROCEDURES) == len(crossval.PROCEDURES))
 
 
 if __name__ == '__main__':

@@ -1,7 +1,14 @@
 import argparse
-
-from src.util.helpers import *
-from src.config import *
+from src.util.helpers import extract_topic_data
+from src.util.loaders import (
+    load_embedded_topic,
+    save_embedded_item
+)
+from src.config import (
+    EMBEDDING_METHODS,
+    DATASET_IDS,
+    TOPIC_IDS
+)
 
 
 if __name__ == '__main__':

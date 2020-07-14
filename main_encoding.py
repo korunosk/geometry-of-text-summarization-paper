@@ -1,8 +1,15 @@
 import argparse
-
-from src.util.encoders import *
-from src.util.helpers import *
-from src.config import *
+from src.util.encoders import ENCODERS
+from src.util.helpers import embed_topic
+from src.util.loaders import (
+    load_dataset,
+    save_embedded_topic
+)
+from src.config import (
+    EMBEDDING_METHODS,
+    DATASET_IDS,
+    TOPIC_IDS
+)
 
 
 if __name__ == '__main__':

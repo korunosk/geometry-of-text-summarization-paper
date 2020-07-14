@@ -1,11 +1,11 @@
 import rouge
 from gensim.parsing.preprocessing import preprocess_string
 from src.util.encoders import FILTERS
-from src.util.helpers import (
+from src.util.helpers import extract_topic_data
+from src.util.loaders import (
     load_dataset,
-    extract_topic_data
+    save_rouge_scores
 )
-from src.util.loaders import save_rouge_scores
 from src.config import (
     DATASET_IDS,
     TOPIC_IDS

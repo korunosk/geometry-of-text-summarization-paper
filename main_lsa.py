@@ -1,7 +1,11 @@
 from sklearn.utils.extmath import randomized_svd
+from src.util.helpers import (
+    read_sentences,
+    make_vectorizer
+)
+from src.util.loaders import save_embeddings
+from src.config import RANDOM_STATE
 
-from src.util.helpers import *
-from src.config import *
 
 if __name__ == '__main__':
 
