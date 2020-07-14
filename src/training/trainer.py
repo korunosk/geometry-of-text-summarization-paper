@@ -70,7 +70,7 @@ class ModelTrainer():
         model = NNRougeRegModel(config).to(DEVICE1)
 
         criterion = nn.MSELoss()
-        optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+        optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
 
         loss = []
 
@@ -124,7 +124,7 @@ class ModelTrainer():
         model = NNWAvgPRModel(config).to(DEVICE1)
 
         criterion = nn.BCELoss()
-        optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+        optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
 
         def forward(batch):
             d, si, sj, m, mi, mj, y = batch
@@ -192,7 +192,7 @@ class ModelTrainer():
         model = LinSinkhornRegModel(config).to(DEVICE1)
 
         criterion = nn.MSELoss()
-        optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+        optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
 
         def forward(batch):
             d, si, h, hi, y = batch
@@ -256,7 +256,7 @@ class ModelTrainer():
         model = LinSinkhornPRModel(config).to(DEVICE1)
 
         criterion = nn.BCELoss()
-        optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+        optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
 
         def forward(batch):
             d, si, sj, h, hi, hj, y = batch
@@ -325,7 +325,7 @@ class ModelTrainer():
         model = NNSinkhornPRModel(config).to(DEVICE1)
 
         criterion = nn.BCELoss()
-        optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+        optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
 
         def forward(batch):
             d, si, sj, h, hi, hj, y = batch
