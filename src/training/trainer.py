@@ -18,8 +18,7 @@ from src.config_models import *
 
 class ModelTrainer():
 
-    def accuracy(self, forward, dataset, val, batch_size_val=BATCH_SIZE_VAL):
-        dataset_val = TACDatasetClassification(dataset, val)
+    def accuracy(self, forward, dataset_val, batch_size_val=BATCH_SIZE_VAL):
         data_loader_val = DataLoader(dataset_val, batch_size=batch_size_val, shuffle=True)
 
         auc = 0.0
@@ -34,6 +33,20 @@ class ModelTrainer():
             auc += torch.sum(y_hat == y.type(torch.bool).to(DEVICE1)).type(torch.float)
         
         return auc.cpu().numpy() / len(dataset_val)
+    
+    def rmse(self, forward, dataset_val, batch_size_val=BATCH_SIZE_VAL):
+        data_loader_val = DataLoader(dataset_val, batch_size=batch_size_val, shuffle=True)
+
+        mse = 0.0
+
+        for i, batch in enumerate(data_loader_val):
+            *_, y = batch
+
+            y_hat = forward(batch)
+            
+            mse += torch.sum(torch.pow(y_hat - y.to(DEVICE1), 2))
+        
+        return np.sqrt(mse.cpu().numpy() / len(dataset_val))
 
     def load_dataset(self, transform_documents, transform_summary):
         dataset = defaultdict(defaultdict)
@@ -72,6 +85,11 @@ class ModelTrainer():
         criterion = nn.MSELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
 
+        def forward(batch):
+            e, y = batch
+
+            return model(e.to(DEVICE1))
+
         loss = []
 
         for epoch in range(config['epochs']):
@@ -80,7 +98,7 @@ class ModelTrainer():
             for i, batch in enumerate(data_loader_train):
                 e, y = batch
 
-                y_hat = model(e.to(DEVICE1))
+                y_hat = forward(batch)
 
                 L = criterion(y_hat, -torch.log(y + 1e-8).to(DEVICE1))
 
@@ -90,7 +108,11 @@ class ModelTrainer():
 
                 loss.append(L.item())
 
-                print(f'{100 * float(i) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
+                print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
+            
+            with torch.no_grad():
+                dataset_val = TACDatasetRegressionRouge(dataset, val)
+                print(f'RMSE: {self.rmse(forward, dataset_val):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
@@ -155,10 +177,11 @@ class ModelTrainer():
 
                 loss.append(L.item())
 
-                print(f'{100 * float(i) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
+                print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
             
             with torch.no_grad():
-                print(f'AUC: {self.accuracy(forward, dataset, val):.4f}')
+                dataset_val = TACDatasetClassification(dataset, val)
+                print(f'AUC: {self.accuracy(forward, dataset_val):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
@@ -222,7 +245,11 @@ class ModelTrainer():
 
                 loss.append(L.item())
                 
-                print(f'{100 * float(i) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
+                print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
+            
+            with torch.no_grad():
+                dataset_val = TACDatasetRegression(dataset, val)
+                print(f'RMSE: {self.rmse(forward, dataset_val):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
@@ -288,10 +315,11 @@ class ModelTrainer():
 
                 loss.append(L.item())
                 
-                print(f'{100 * float(i) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
+                print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
             
             with torch.no_grad():
-                print(f'AUC: {self.accuracy(forward, dataset, val, 256):.4f}')
+                dataset_val = TACDatasetClassification(dataset, val)
+                print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
@@ -357,10 +385,11 @@ class ModelTrainer():
 
                 loss.append(L.item())
                 
-                print(f'{100 * float(i) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
+                print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
             
             with torch.no_grad():
-                print(f'AUC: {self.accuracy(forward, dataset, val, 256):.4f}')
+                dataset_val = TACDatasetClassification(dataset, val)
+                print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
