@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 import seaborn as sns
+sns.set_style('ticks')
 from torch.utils.data import DataLoader
 from collections import defaultdict
 from src.implementation.transform.datasets import *
@@ -17,9 +18,6 @@ from src.config import (
     DEVICES
 )
 from src.config_models import CONFIG_MODELS
-
-
-sns.set_style('ticks')
 
 
 DEVICE = DEVICES[0]

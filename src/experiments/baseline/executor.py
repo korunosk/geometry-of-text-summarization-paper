@@ -4,6 +4,7 @@ import numpy as np
 import ray # Interferes with linalg.det causing semantic_spread to output different results
 import matplotlib.pyplot as plt
 import seaborn as sns
+sns.set_style('ticks')
 from scipy.spatial.distance import cdist
 from scipy.stats import kendalltau
 from src.external.lexrank import degree_centrality_scores
@@ -30,9 +31,6 @@ from src.config import (
     DEVICES
 )
 from src.config_models import CONFIG_MODELS
-
-
-sns.set_style('ticks')
 
 
 # models = [
