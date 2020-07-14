@@ -5,6 +5,7 @@ from src.util.loaders import (
     save_model
 )
 
+
 def train_model_1(embedding_method, dataset_id, layer):
     data = load_train_data(dataset_id, 'regression_rouge')
     train, val = stratified_sampling(data)
