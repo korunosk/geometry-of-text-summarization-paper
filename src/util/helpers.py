@@ -1,13 +1,19 @@
-import numpy as np
-from operator import itemgetter
-from itertools import chain, product
-import time
 import datetime
-
+from operator import itemgetter
+from itertools import (
+    chain,
+    product
+)
 from sklearn.feature_extraction.text import CountVectorizer
-
-from src.util.loaders import *
-from src.config import *
+from src.util.loaders import (
+    load_dataset,
+    load_rouge_scores
+)
+from src.config import (
+    DATASET_IDS,
+    TOPIC_IDS,
+    STOPWORDS
+)
 
 
 def format_time(elapsed):

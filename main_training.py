@@ -4,6 +4,7 @@ import argparse
 import src.training.crossval as crossval
 import src.training.stratified as stratified
 from scipy.stats import kendalltau
+from src.util.helpers import format_time
 from src.config import (
     EMBEDDING_METHODS,
     DATASET_IDS

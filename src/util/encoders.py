@@ -1,13 +1,19 @@
 import torch
-from transformers import BartTokenizer, BertTokenizer
-from transformers import BartModel, BertModel
-
+from transformers import (
+    BartTokenizer,
+    BertTokenizer,
+    BartModel,
+    BertModel
+)
 from gensim.parsing.preprocessing import *
-
 from bert_serving.client import BertClient
-
-from .loaders import *
-from .helpers import *
+from .loaders import (
+    load_embeddings
+)
+from .helpers import (
+    read_sentences,
+    make_vectorizer
+)
 
 
 FILTERS = [

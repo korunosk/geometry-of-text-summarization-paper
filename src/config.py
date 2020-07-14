@@ -1,11 +1,14 @@
 import os
 import string
+import torch
 from gensim.parsing.preprocessing import STOPWORDS
+
+RANDOM_STATE = 42
+
+torch.manual_seed(RANDOM_STATE)
 
 STOPWORDS = list(STOPWORDS)
 PUNCTUATION = list(string.punctuation)
-
-RANDOM_STATE = 42
 
 EPOCHS = 10
 BATCH_SIZE_VAL = 1024
@@ -57,9 +60,7 @@ DATA_DIR        = os.path.join(BASE_DATA_DIR, 'data')
 MODELS_DIR      = os.path.join(BASE_DATA_DIR, 'models')
 PLOTS_DIR       = os.path.join(BASE_DATA_DIR, 'plots')
 
-
-import torch
-
-torch.manual_seed(RANDOM_STATE)
-DEVICE0 = torch.device('cuda:0')
-DEVICE1 = torch.device('cuda:1')
+DEVICES = [
+    torch.device('cuda:0'),
+    torch.device('cuda:1')
+]

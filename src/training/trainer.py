@@ -1,22 +1,28 @@
-from collections import defaultdict
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
-
 import matplotlib.pyplot as plt
 import seaborn as sns
-sns.set_style('ticks')
-
+from torch.utils.data import DataLoader
+from collections import defaultdict
 from src.implementation.transform.datasets import *
 from src.implementation.transform.models import *
-from src.implementation.transform.preprocessing import *
-from src.util.loaders import *
-from src.config import *
-from src.config_models import *
+from src.util.helpers import extract_topic_data
+from src.util.loaders import (
+    load_embedded_topic
+)
+from src.config import (
+    TOPIC_IDS,
+    BATCH_SIZE_VAL,
+    DEVICES
+)
+from src.config_models import CONFIG_MODELS
 
 
-DEVICE = DEVICE0
+sns.set_style('ticks')
+
+
+DEVICE = DEVICES[0]
 
 
 class ModelTrainer():

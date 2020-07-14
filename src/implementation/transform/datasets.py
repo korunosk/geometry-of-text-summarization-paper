@@ -1,12 +1,6 @@
-import os
 import numpy as np
-from gensim.corpora import Dictionary
-from gensim.parsing.preprocessing import preprocess_documents
 import torch
 from torch.utils.data import Dataset
-from sklearn.preprocessing import normalize
-
-from src.util.helpers import *
 
 
 class TACDatasetRegressionRouge(Dataset):

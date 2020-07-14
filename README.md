@@ -92,7 +92,7 @@ tensorboard --logdir runs/
 
 ```bash
 nvidia-smi
-nvidia-smi --query-gpu=memory.total,memory.free --format=csv -l 5
+nvidia-smi --query-gpu=memory.total,memory.free --format=csv -l 1
 ```
 
 ## Scripts

@@ -1,6 +1,6 @@
 import numpy as np
-from scipy.spatial.distance import cdist
 import ot
+from scipy.spatial.distance import cdist
 
 
 def word_mover_distance(document_embs: np.array, summary_embs: np.array) -> float:

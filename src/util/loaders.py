@@ -2,10 +2,13 @@ import os
 import json
 import orjson
 import numpy as np
-
 import torch
-
-from src.config import *
+from src.config import (
+    BASE_DATA_DIR,
+    EMBEDDINGS_DIR,
+    DATA_DIR,
+    MODELS_DIR
+)
 
 
 def load_rouge_scores(dataset_id):

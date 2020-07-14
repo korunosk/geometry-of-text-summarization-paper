@@ -1,15 +1,7 @@
-import numpy as np
-
-from scipy.spatial import ConvexHull
-from scipy.spatial.qhull import QhullError
-
-import torch
 from torch.utils.tensorboard import SummaryWriter
-
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-
-from src.config import *
+from src.config import RANDOM_STATE
 
 
 def make_pytorch_projector(log_dir, embeddings, global_step):
@@ -29,8 +21,8 @@ def project_pca(embs, t, n_components=2):
     return pts[:t], pts[t:]
 
 
-def project_tsne(embs, t):
+def project_tsne(embs, t, n_components=2):
     ''' Projects embeddings using t-SNE '''
-    tsne = TSNE(n_components=2, perplexity=30, n_iter=5000, verbose=1, random_state=RANDOM_STATE)
+    tsne = TSNE(n_components=n_components, perplexity=30, n_iter=5000, verbose=1, random_state=RANDOM_STATE)
     pts = tsne.fit_transform(embs)
     return pts[:t], pts[t:]
