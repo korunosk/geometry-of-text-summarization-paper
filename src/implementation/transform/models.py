@@ -138,7 +138,7 @@ class CondLinSinkhornPRModel(nn.Module):
             raise Exception()
 
     def predict(self, d, si, h, hi, M):
-        return self.sinkhorn(h, self.transform(d, M), hi, self.transform(si, M))
+        return self.sinkhorn(h, self.transform(d, M=M), hi, self.transform(si, M=M))
 
     def forward(self, d, si, sj, h, hi, hj):
         M = self.model(d)
