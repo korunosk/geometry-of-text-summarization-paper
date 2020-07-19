@@ -26,7 +26,6 @@ CONFIG_MODELS = {
         'epochs': 5
     },
     'LinSinkhornPRModel': {
-        'D_in': 768,
         'D': 768,
         'p': 2,
         'blur': 0.05,
@@ -45,5 +44,15 @@ CONFIG_MODELS = {
         'learning_rate': 0.1,
         'batch_size': 128,
         'epochs': 5
-    }
+    },
+    'CondLinSinkhornPRModel': {
+        'D': 768,
+        'p': 2,
+        'blur': 0.05,
+        'scaling': 0.9,
+        'scaling_factor': 1,
+        'learning_rate': 0.1,
+        'batch_size': 128,
+        'epochs': 5
+    },
 }

@@ -404,3 +404,73 @@ class ModelTrainer():
         # plt.show()
 
         return model
+
+    def train_cond_lin_sinkhorn_pr_model(self, train, val):
+        def transform_documents(document_embs):
+            document_embs, hist = pad_h(document_embs, 650)
+            return {
+                'embs': torch.tensor(document_embs, dtype=torch.float),
+                'aux': torch.tensor(hist, dtype=torch.float)
+            }
+        
+        def transform_summary(summary_embs):
+            summary_embs, hist = pad_h(summary_embs, 15)
+            return {
+                'embs': torch.tensor(summary_embs, dtype=torch.float),
+                'aux': torch.tensor(hist, dtype=torch.float)
+            }
+
+        config = CONFIG_MODELS['CondLinSinkhornPRModel']
+
+        dataset = self.load_dataset(transform_documents, transform_summary)
+        
+        dataset_train = TACDatasetClassification(dataset, train)
+        data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
+
+        model = CondLinSinkhornPRModel(config).to(DEVICE)
+
+        criterion = nn.BCELoss()
+        optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
+
+        def forward(batch):
+            d, si, sj, h, hi, hj, y = batch
+
+            return model(
+                d.to(DEVICE),
+                si.to(DEVICE),
+                sj.to(DEVICE),
+                h.to(DEVICE),
+                hi.to(DEVICE),
+                hj.to(DEVICE)
+            )
+
+        loss = []
+
+        for epoch in range(config['epochs']):
+            print(f'Epoch {epoch + 1}')
+
+            for i, batch in enumerate(data_loader_train):
+                d, si, sj, h, hi, hj, y = batch
+                
+                y_hat = forward(batch)
+                
+                L = criterion(y_hat, y.to(DEVICE))
+                
+                L.backward()
+                optimizer.step()
+                optimizer.zero_grad()
+
+                loss.append(L.item())
+                
+                print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
+            
+            with torch.no_grad():
+                dataset_val = TACDatasetClassification(dataset, val)
+                print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
+
+        # fig = plt.figure(figsize=(10,5))
+        # ax = fig.add_subplot(1,1,1)
+        # plot_loss(ax, loss)
+        # plt.show()
+
+        return model

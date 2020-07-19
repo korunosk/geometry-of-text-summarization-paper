@@ -103,3 +103,39 @@ class NNSinkhornPRModel(nn.Module):
         dist1 = self.predict(d, si, h, hi)
         dist2 = self.predict(d, sj, h, hj)
         return self.sigm(self.config['scaling_factor'] * (dist2 - dist1))
+
+
+# Conditional Models
+
+class TransformModule(nn.Module):
+
+    def __init__(self, D):
+        super(TransformModule, self).__init__()
+        self.D = D
+        self.layer = nn.Linear(self.D, self.D ** 2)
+    
+    def forward(self, d):
+        M = F.relu(self.layer(d.mean(axis=1)))
+        return M.reshape(-1, self.D, self.D)
+
+
+class CondLinSinkhornPRModel(nn.Module):
+
+    def __init__(self, config):
+        super(CondLinSinkhornPRModel, self).__init__()
+        self.config = config
+        self.transformModule = TransformModule(self.config['D'])
+        self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
+        self.sigm = nn.Sigmoid()
+    
+    def transform(self, x):
+        return torch.bmm(x, self.M)
+
+    def predict(self, d, si, h, hi):
+        return self.sinkhorn(h, self.transform(d), hi, self.transform(si))
+
+    def forward(self, d, si, sj, h, hi, hj):
+        self.M = self.transformModule(d)
+        dist1 = self.predict(d, si, h, hi)
+        dist2 = self.predict(d, sj, h, hj)
+        return self.sigm(self.config['scaling_factor'] * (dist2 - dist1))

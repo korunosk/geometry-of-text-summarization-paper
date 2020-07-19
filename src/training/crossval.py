@@ -71,10 +71,24 @@ def train_model_5(embedding_method, dataset_id, layer):
         save_model(embedding_method, dataset_id, layer, f'nn_sinkhorn_pr_model_{i}', model)
 
 
+def train_model_6(embedding_method, dataset_id, layer):
+    data = load_train_data(dataset_id, 'classification')
+    for i, train, val in cross_validation_sampling(data):
+        print(len(train), len(val))
+
+        print(f'Model {i + 1}')
+
+        trainer = ModelTrainer(embedding_method, dataset_id, layer)
+        model = trainer.train_cond_lin_sinkhorn_pr_model(train, val)
+
+        save_model(embedding_method, dataset_id, layer, f'cond_lin_sinkhorn_pr_model_{i}', model)
+
+
 PROCEDURES = [
     train_model_1,
     train_model_2,
     train_model_3,
     train_model_4,
-    train_model_5
+    train_model_5,
+    train_model_6
 ]
