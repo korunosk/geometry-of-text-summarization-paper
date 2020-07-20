@@ -132,7 +132,7 @@ class CondLinSinkhornPRModel(nn.Module):
         if 'M' in kwargs:
             return torch.bmm(x, kwargs['M'])
         elif 'd' in kwargs:
-            M = self.model(d)
+            M = self.model(kwargs['d'])
             return torch.bmm(x, M)
         else:
             raise Exception()
