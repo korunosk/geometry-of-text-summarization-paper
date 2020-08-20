@@ -34,10 +34,10 @@ class NNWAvgPRModel(nn.Module):
     def transform(self, x):
         return F.relu(self.layer1(x))
 
-    def predict(self, d, s, m):
-        x = torch.cat((self.transform(d), self.transform(s)), axis=2)
+    def predict(self, d, si, m, mi):
+        x = torch.cat((self.transform(d), self.transform(si)), axis=2)
         z = self.layer2(x).squeeze()
-        return torch.stack([ torch.sum(z[i].masked_select(m[i])) for i in range(z.shape[0]) ])
+        return torch.stack([ torch.sum(z[i].masked_select(mi[i])) for i in range(z.shape[0]) ])
 
     def forward(self, d, si, sj, mi, mj):
         score1 = self.predict(d, si, mi)
@@ -128,17 +128,13 @@ class CondLinSinkhornPRModel(nn.Module):
         self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
         self.sigm = nn.Sigmoid()
     
-    def transform(self, x, **kwargs):
-        if 'M' in kwargs:
-            return torch.bmm(x, kwargs['M'])
-        elif 'd' in kwargs:
-            M = self.model(kwargs['d'])
-            return torch.bmm(x, M)
-        else:
-            raise Exception()
+    def transform(self, x, M):
+        return torch.bmm(x, M)
 
-    def predict(self, d, si, h, hi, M):
-        return self.sinkhorn(h, self.transform(d, M=M), hi, self.transform(si, M=M))
+    def predict(self, d, si, h, hi, M=None):
+        if M is None:
+            M = self.model(d)
+        return self.sinkhorn(h, self.transform(d, M), hi, self.transform(si, M))
 
     def forward(self, d, si, sj, h, hi, hj):
         M = self.model(d)

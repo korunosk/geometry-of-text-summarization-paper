@@ -106,7 +106,7 @@ def load_model(embedding_method, dataset_id, layer, model_id, Model, config):
         directory = os.path.join(directory, str(layer))
     fname = os.path.join(directory, model_id) + '.pt'
     model = Model(config)
-    model.load_state_dict(torch.load(fname))
+    model.load_state_dict(torch.load(fname, map_location='cpu'))
     model.eval()
     return model
 

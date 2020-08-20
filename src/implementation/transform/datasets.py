@@ -71,16 +71,16 @@ class TACDatasetClassification(Dataset):
 
 def repeat_mean(x: list, M: int) -> np.array:
     ''' Repeats the mean of a tensor several times along the vertical axis. '''
-    x = np.mean(x, 0)
+    x = np.mean(x, 0, dtype=np.float32)
     x = np.tile(x, (M, 1))
-    return x
+    return x, np.array([], dtype=np.float32)
 
 
 def pad(x: list, M: int) -> (np.array, np.array):
     ''' Pads a tensor with zero-valued vectors along the vertical axis and
     creates a mask to designate the original tensor's vectors. '''
     m, n = len(x), len(x[0])
-    p = np.zeros((M, n), dtype=np.float)
+    p = np.zeros((M, n), dtype=np.float32)
     p[:m] = x
     mask = np.zeros(M, dtype=np.bool)
     mask[:m] = True
@@ -91,8 +91,8 @@ def pad_h(x: list, M: int) -> (np.array, np.array):
     ''' Pads a tensor with zero-valued vectors along the vertical axis and
     creates the histogram for the original tensor's vectors. '''
     m, n = len(x), len(x[0])
-    p = np.zeros((M, n), dtype=np.float)
+    p = np.zeros((M, n), dtype=np.float32)
     p[:m] = x
-    hist = np.zeros(M, dtype=np.float)
+    hist = np.zeros(M, dtype=np.float32)
     hist[:m] = 1.0 / m
     return p, hist

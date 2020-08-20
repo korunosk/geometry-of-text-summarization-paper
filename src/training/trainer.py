@@ -74,11 +74,15 @@ class ModelTrainer():
     def train_nn_rouge_reg_model(self, train, val):
         def transform_documents(document_embs):
             return {
-                'embs': torch.tensor(document_embs, dtype=torch.float)
+                'embs': torch.tensor(document_embs, dtype=torch.float),
+                'aux': None
             }
         
         def transform_summary(summary_embs):
-            return None
+            return {
+                'embs': None,
+                'aux': None
+            }
         
         config = CONFIG_MODELS['NNRougeRegModel']
 
@@ -130,10 +134,10 @@ class ModelTrainer():
 
     def train_nn_wavg_pr_model(self, train, val):
         def transform_documents(document_embs):
-            document_embs = repeat_mean(document_embs, 15)
+            document_embs, mask = repeat_mean(document_embs, 15)
             return {
                 'embs': torch.tensor(document_embs, dtype=torch.float),
-                'aux': torch.tensor([], dtype=torch.bool)
+                'aux': torch.tensor(mask, dtype=torch.bool)
             }
         
         def transform_summary(summary_embs):

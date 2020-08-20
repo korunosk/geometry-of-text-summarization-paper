@@ -45,7 +45,7 @@ from src.config_models import CONFIG_MODELS
 # def transform(x):
 #     return models[0].transform(
 #         torch.tensor(x, dtype=torch.float).to(DEVICES[1])
-#     ).data.cpu().numpy().tolist()
+#     ).data.cpu().tolist()
 
 def transform(x):
     return x

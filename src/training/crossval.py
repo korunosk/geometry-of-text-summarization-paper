@@ -83,6 +83,9 @@ def train_model_6(embedding_method, dataset_id, layer):
 
         save_model(embedding_method, dataset_id, layer, f'cond_lin_sinkhorn_pr_model_{i}', model)
 
+        import torch
+        torch.cuda.empty_cache()
+
 
 PROCEDURES = [
     train_model_1,
