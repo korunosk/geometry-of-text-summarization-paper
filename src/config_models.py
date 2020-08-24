@@ -4,7 +4,7 @@ CONFIG_MODELS = {
         'p': 2,
         'blur': 0.05,
         'scaling': 0.9,
-        'learning_rate': 0.1,
+        'learning_rate': 0.01,
         'batch_size': 128,
         'epochs': 5
     },
@@ -12,7 +12,7 @@ CONFIG_MODELS = {
         'D': 768,
         'H': 1536,
         'scaling_factor': 1,
-        'learning_rate': 0.1,
+        'learning_rate': 0.01,
         'batch_size': 128,
         'epochs': 5
     },
@@ -21,7 +21,7 @@ CONFIG_MODELS = {
         'p': 2,
         'blur': 0.05,
         'scaling': 0.9,
-        'learning_rate': 0.1,
+        'learning_rate': 0.01,
         'batch_size': 128,
         'epochs': 5
     },
@@ -31,7 +31,7 @@ CONFIG_MODELS = {
         'blur': 0.05,
         'scaling': 0.9,
         'scaling_factor': 1,
-        'learning_rate': 0.1,
+        'learning_rate': 0.01,
         'batch_size': 128,
         'epochs': 5
     },
@@ -41,7 +41,7 @@ CONFIG_MODELS = {
         'blur': 0.05,
         'scaling': 0.9,
         'scaling_factor': 1,
-        'learning_rate': 0.1,
+        'learning_rate': 0.01,
         'batch_size': 128,
         'epochs': 5
     },
@@ -51,7 +51,7 @@ CONFIG_MODELS = {
         'blur': 0.05,
         'scaling': 0.9,
         'scaling_factor': 1,
-        'learning_rate': 0.1,
+        'learning_rate': 0.01,
         'batch_size': 128,
         'epochs': 5
     },
