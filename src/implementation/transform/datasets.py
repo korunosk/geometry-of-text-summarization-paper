@@ -36,9 +36,9 @@ class TACDatasetRegression(Dataset):
         
         i  = self.data[idx][1]
         d  = self.dataset[topic_id]['documents']['embs']
-        si = self.dataset[topic_id][f'summary_{i}']['embs']
+        si = self.dataset[topic_id]['summaries'][i]['embs']
         a  = self.dataset[topic_id]['documents']['aux']
-        ai = self.dataset[topic_id][f'summary_{i}']['aux']
+        ai = self.dataset[topic_id]['summaries'][i]['aux']
         y  = torch.tensor(self.data[idx][2], dtype=torch.float)
         
         return d, si, a, ai, y
@@ -59,11 +59,11 @@ class TACDatasetClassification(Dataset):
         i  = self.data[idx][1]
         j  = self.data[idx][2]
         d  = self.dataset[topic_id]['documents']['embs']
-        si = self.dataset[topic_id][f'summary_{i}']['embs']
-        sj = self.dataset[topic_id][f'summary_{j}']['embs']
+        si = self.dataset[topic_id]['summaries'][i]['embs']
+        sj = self.dataset[topic_id]['summaries'][j]['embs']
         a  = self.dataset[topic_id]['documents']['aux']
-        ai = self.dataset[topic_id][f'summary_{i}']['aux']
-        aj = self.dataset[topic_id][f'summary_{j}']['aux']
+        ai = self.dataset[topic_id]['summaries'][i]['aux']
+        aj = self.dataset[topic_id]['summaries'][j]['aux']
         y  = torch.tensor(self.data[idx][3], dtype=torch.float)
         
         return d, si, sj, a, ai, aj, y
