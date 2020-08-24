@@ -15,7 +15,7 @@ from src.config import (
 if __name__ == '__main__':
 
     evaluator = rouge.Rouge(metrics=['rouge-n'],
-                            max_n=2,
+                            max_n=1,
                             length_limit=100,
                             length_limit_type='words')
 
@@ -38,7 +38,8 @@ if __name__ == '__main__':
             for sentence in documents:
                 if not preprocess_string(sentence, FILTERS):
                     continue
-                r = evaluator.get_scores(sentence, reference_summaries)['rouge-2']['r']
+                s = evaluator.get_scores(sentence, reference_summaries)
+                r = s['rouge-1']['r']
                 scores[topic_id].append(r)
         
         save_rouge_scores(dataset_id, scores)
