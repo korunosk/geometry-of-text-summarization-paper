@@ -40,8 +40,8 @@ class NNWAvgPRModel(nn.Module):
         return torch.stack([ torch.sum(z[i].masked_select(mi[i])) for i in range(z.shape[0]) ])
 
     def forward(self, d, si, sj, mi, mj):
-        score1 = self.predict(d, si, mi)
-        score2 = self.predict(d, sj, mj)
+        score1 = self.predict(d, si, None, mi)
+        score2 = self.predict(d, sj, None, mj)
         return self.sigm(self.config['scaling_factor'] * (score1 - score2))
 
 
