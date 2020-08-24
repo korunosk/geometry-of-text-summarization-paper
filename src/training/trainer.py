@@ -18,6 +18,7 @@ from src.config import (
     DEVICES
 )
 from src.config_models import CONFIG_MODELS
+from src.config_transformers import TRANSFORMERS
 
 
 DEVICE = DEVICES[0]
@@ -55,15 +56,17 @@ class ModelTrainer():
         
         return np.sqrt(mse.cpu().numpy() / len(dataset_val))
 
-    def load_dataset(self, transform_documents, transform_summary):
+    def load_dataset(self, transformer):
         dataset = defaultdict(defaultdict)
         for topic_id in TOPIC_IDS[self.dataset_id]:
             topic = load_embedded_topic(self.embedding_method, self.dataset_id, self.layer, topic_id)
             document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
-            dataset[topic_id]['documents'] = transform_documents(document_embs)
+            dataset[topic_id]['documents'] = transformer['transform_documents'](document_embs)
+            dataset[topic_id]['summaries'] = defaultdict(defaultdict)
             for i, idx in enumerate(indices):
-                dataset[topic_id]['summary_{}'.format(summary_ids[i])] = \
-                    transform_summary(summary_embs[idx[0]:idx[1]])
+                dataset[topic_id]['summaries'][summary_ids[i]] = \
+                    transformer['transform_summary'](summary_embs[idx[0]:idx[1]])
+            dataset[topic_id]['pyr_scores'] = pyr_scores
         return dataset
 
     def __init__(self, embedding_method, dataset_id, layer):
@@ -72,21 +75,9 @@ class ModelTrainer():
         self.layer = layer
 
     def train_nn_rouge_reg_model(self, train, val):
-        def transform_documents(document_embs):
-            return {
-                'embs': torch.tensor(document_embs, dtype=torch.float),
-                'aux': None
-            }
-        
-        def transform_summary(summary_embs):
-            return {
-                'embs': None,
-                'aux': None
-            }
-        
         config = CONFIG_MODELS['NNRougeRegModel']
 
-        dataset = self.load_dataset(transform_documents, transform_summary)
+        dataset = self.load_dataset(TRANSFORMERS['NNRougeRegModel'])
 
         dataset_train = TACDatasetRegressionRouge(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
@@ -133,23 +124,9 @@ class ModelTrainer():
         return model
 
     def train_nn_wavg_pr_model(self, train, val):
-        def transform_documents(document_embs):
-            document_embs, mask = repeat_mean(document_embs, 15)
-            return {
-                'embs': torch.tensor(document_embs, dtype=torch.float),
-                'aux': torch.tensor(mask, dtype=torch.bool)
-            }
-        
-        def transform_summary(summary_embs):
-            summary_embs, mask = pad(summary_embs, 15)
-            return {
-                'embs': torch.tensor(summary_embs, dtype=torch.float),
-                'aux': torch.tensor(mask, dtype=torch.bool)
-            }
-        
         config = CONFIG_MODELS['NNWAvgPRModel']
 
-        dataset = self.load_dataset(transform_documents, transform_summary)
+        dataset = self.load_dataset(TRANSFORMERS['NNWAvgPRModel'])
 
         dataset_train = TACDatasetClassification(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
@@ -202,23 +179,9 @@ class ModelTrainer():
         return model
 
     def train_lin_sinkhorn_reg_model(self, train, val):
-        def transform_documents(document_embs):
-            document_embs, hist = pad_h(document_embs, 650)
-            return {
-                'embs': torch.tensor(document_embs, dtype=torch.float),
-                'aux': torch.tensor(hist, dtype=torch.float)
-            }
-        
-        def transform_summary(summary_embs):
-            summary_embs, hist = pad_h(summary_embs, 15)
-            return {
-                'embs': torch.tensor(summary_embs, dtype=torch.float),
-                'aux': torch.tensor(hist, dtype=torch.float)
-            }
-        
         config = CONFIG_MODELS['LinSinkhornRegModel']
-
-        dataset = self.load_dataset(transform_documents, transform_summary)
+        
+        dataset = self.load_dataset(TRANSFORMERS['LinSinkhornRegModel'])
         
         dataset_train = TACDatasetRegression(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
@@ -270,23 +233,9 @@ class ModelTrainer():
         return model
 
     def train_lin_sinkhorn_pr_model(self, train, val):
-        def transform_documents(document_embs):
-            document_embs, hist = pad_h(document_embs, 650)
-            return {
-                'embs': torch.tensor(document_embs, dtype=torch.float),
-                'aux': torch.tensor(hist, dtype=torch.float)
-            }
-        
-        def transform_summary(summary_embs):
-            summary_embs, hist = pad_h(summary_embs, 15)
-            return {
-                'embs': torch.tensor(summary_embs, dtype=torch.float),
-                'aux': torch.tensor(hist, dtype=torch.float)
-            }
-
         config = CONFIG_MODELS['LinSinkhornPRModel']
 
-        dataset = self.load_dataset(transform_documents, transform_summary)
+        dataset = self.load_dataset(TRANSFORMERS['LinSinkhornPRModel'])
         
         dataset_train = TACDatasetClassification(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
@@ -340,23 +289,9 @@ class ModelTrainer():
         return model
 
     def train_nn_sinkhorn_pr_model(self, train, val):
-        def transform_documents(document_embs):
-            document_embs, hist = pad_h(document_embs, 650)
-            return {
-                'embs': torch.tensor(document_embs, dtype=torch.float),
-                'aux': torch.tensor(hist, dtype=torch.float)
-            }
-        
-        def transform_summary(summary_embs):
-            summary_embs, hist = pad_h(summary_embs, 15)
-            return {
-                'embs': torch.tensor(summary_embs, dtype=torch.float),
-                'aux': torch.tensor(hist, dtype=torch.float)
-            }
-        
         config = CONFIG_MODELS['NNSinkhornPRModel']
 
-        dataset = self.load_dataset(transform_documents, transform_summary)
+        dataset = self.load_dataset(TRANSFORMERS['NNSinkhornPRModel'])
         
         dataset_train = TACDatasetClassification(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
@@ -410,23 +345,9 @@ class ModelTrainer():
         return model
 
     def train_cond_lin_sinkhorn_pr_model(self, train, val):
-        def transform_documents(document_embs):
-            document_embs, hist = pad_h(document_embs, 650)
-            return {
-                'embs': torch.tensor(document_embs, dtype=torch.float),
-                'aux': torch.tensor(hist, dtype=torch.float)
-            }
-        
-        def transform_summary(summary_embs):
-            summary_embs, hist = pad_h(summary_embs, 15)
-            return {
-                'embs': torch.tensor(summary_embs, dtype=torch.float),
-                'aux': torch.tensor(hist, dtype=torch.float)
-            }
-
         config = CONFIG_MODELS['CondLinSinkhornPRModel']
 
-        dataset = self.load_dataset(transform_documents, transform_summary)
+        dataset = self.load_dataset(TRANSFORMERS['CondLinSinkhornPRModel'])
         
         dataset_train = TACDatasetClassification(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
