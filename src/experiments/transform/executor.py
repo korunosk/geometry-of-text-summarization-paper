@@ -45,39 +45,39 @@ class TransformExperimentExecutor():
         self.dataset_id = dataset_id
         self.layer = layer
 
-        models = [
+        self.models = [
             load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_rouge_reg_model', NNRougeRegModel, CONFIG_MODELS['NNRougeRegModel']).to(DEVICE),
             load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_wavg_pr_model', NNWAvgPRModel, CONFIG_MODELS['NNWAvgPRModel']).to(DEVICE),
-        #     load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, CONFIG_MODELS['LinSinkhornRegModel']).to(DEVICE),
-        #     load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, CONFIG_MODELS['LinSinkhornPRModel']).to(DEVICE),
-        #     load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, CONFIG_MODELS['NNSinkhornPRModel']).to(DEVICE),
-        #     load_model(self.embedding_method, self.dataset_id, self.layer, 'cond_lin_sinkhorn_pr_model', CondLinSinkhornPRModel, CONFIG_MODELS['CondLinSinkhornPRModel']).to(DEVICE)
+            load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, CONFIG_MODELS['LinSinkhornRegModel']).to(DEVICE),
+            load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, CONFIG_MODELS['LinSinkhornPRModel']).to(DEVICE),
+            load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, CONFIG_MODELS['NNSinkhornPRModel']).to(DEVICE),
+            load_model(self.embedding_method, self.dataset_id, self.layer, 'cond_lin_sinkhorn_pr_model', CondLinSinkhornPRModel, CONFIG_MODELS['CondLinSinkhornPRModel']).to(DEVICE)
         ]
 
         self.experiments = [{
                 'label': 'NNRougeRegModel',
                 'transformer': TRANSFORMERS['NNRougeRegModel'], 
-                'procedure': lambda dataset: self.experiment(models[0], dataset)
+                'procedure': lambda dataset: self.experiment(self.models[0], dataset)
             }, {
                 'label': 'NNWAvgPRModel',
                 'transformer': TRANSFORMERS['NNWAvgPRModel'], 
-                'procedure': lambda dataset: self.experiment(models[1], dataset)
-            # }, {
-            #     'label': 'LinSinkhornRegModel',
-            #     'transformer': TRANSFORMERS['LinSinkhornRegModel'], 
-            #     'procedure': lambda dataset: self.experiment(models[2], dataset)
-            # }, {
-            #     'label': 'LinSinkhornPRModel',
-            #     'transformer': TRANSFORMERS['LinSinkhornPRModel'], 
-            #     'procedure': lambda dataset: self.experiment(models[3], dataset)
-            # }, {
-            #     'label': 'NNSinkhornPRModel',
-            #     'transformer': TRANSFORMERS['NNSinkhornPRModel'], 
-            #     'procedure': lambda dataset: self.experiment(models[4], dataset)
-            # }, {
-            #     'label': 'CondLinSinkhornPRModel',
-            #     'transformer': TRANSFORMERS['CondLinSinkhornPRModel'], 
-            #     'procedure': lambda dataset: self.experiment(models[5], dataset)
+                'procedure': lambda dataset: self.experiment(self.models[1], dataset)
+            }, {
+                'label': 'LinSinkhornRegModel',
+                'transformer': TRANSFORMERS['LinSinkhornRegModel'], 
+                'procedure': lambda dataset: self.experiment(self.models[2], dataset)
+            }, {
+                'label': 'LinSinkhornPRModel',
+                'transformer': TRANSFORMERS['LinSinkhornPRModel'], 
+                'procedure': lambda dataset: self.experiment(self.models[3], dataset)
+            }, {
+                'label': 'NNSinkhornPRModel',
+                'transformer': TRANSFORMERS['NNSinkhornPRModel'], 
+                'procedure': lambda dataset: self.experiment(self.models[4], dataset)
+            }, {
+                'label': 'CondLinSinkhornPRModel',
+                'transformer': TRANSFORMERS['CondLinSinkhornPRModel'], 
+                'procedure': lambda dataset: self.experiment(self.models[5], dataset)
             }]
     
     def load_and_extract(self, transformer):
@@ -121,10 +121,10 @@ class TransformExperimentExecutor():
         ax = fig.add_subplot(1,1,1)
         ax.plot(x,  self.experiments[0]['values'], '-o', c='tab:blue',   label=f'Model 1: {np.mean( self.experiments[0]["values"]):.2f}')
         ax.plot(x,  self.experiments[1]['values'], '-^', c='tab:orange', label=f'Model 2: {np.mean( self.experiments[1]["values"]):.2f}')
-        # ax.plot(x, -self.experiments[2]['values'], '-s', c='tab:green',  label=f'Model 3: {np.mean(-self.experiments[2]["values"]):.2f}')
-        # ax.plot(x, -self.experiments[3]['values'], '-+', c='tab:red',    label=f'Model 4: {np.mean(-self.experiments[3]["values"]):.2f}')
-        # ax.plot(x, -self.experiments[4]['values'], '-x', c='tab:purple', label=f'Model 5: {np.mean(-self.experiments[4]["values"]):.2f}')
-        # ax.plot(x, -self.experiments[5]['values'], '-D', c='tab:brown',  label=f'Model 6: {np.mean(-self.experiments[5]["values"]):.2f}')
+        ax.plot(x, -self.experiments[2]['values'], '-s', c='tab:green',  label=f'Model 3: {np.mean(-self.experiments[2]["values"]):.2f}')
+        ax.plot(x, -self.experiments[3]['values'], '-+', c='tab:red',    label=f'Model 4: {np.mean(-self.experiments[3]["values"]):.2f}')
+        ax.plot(x, -self.experiments[4]['values'], '-x', c='tab:purple', label=f'Model 5: {np.mean(-self.experiments[4]["values"]):.2f}')
+        ax.plot(x, -self.experiments[5]['values'], '-D', c='tab:brown',  label=f'Model 6: {np.mean(-self.experiments[5]["values"]):.2f}')
         ax.hlines(0.5, x[0], x[-1], linestyle='dashed', color='gray')
         ax.set_xticks(x)
         ax.set_xticklabels(topic_ids, rotation=45)

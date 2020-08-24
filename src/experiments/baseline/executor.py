@@ -33,31 +33,26 @@ from src.config import (
 from src.config_models import CONFIG_MODELS
 
 
-# models = [
-    # load_model(embedding_method, dataset_id, 'nn_rouge_reg_model', NNRougeRegModel, CONFIG_MODELS['NNRougeRegModel']).to(DEVICES[1]),
-    # load_model(embedding_method, dataset_id, 'nn_wavg_pr_model', NNWAvgPRModel, CONFIG_MODELS['NNWAvgPRModel']).to(DEVICES[1]),
-    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, CONFIG_MODELS['LinSinkhornRegModel']).to(DEVICES[1]),
-    # load_model(embedding_method, dataset_id, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, CONFIG_MODELS['LinSinkhornPRModel']).to(DEVICES[1]),
-    # load_model(embedding_method, dataset_id, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, CONFIG_MODELS['NNSinkhornPRModel']).to(DEVICES[1]),
-# ]
-
-
-# def transform(x):
-#     return models[0].transform(
-#         torch.tensor(x, dtype=torch.float).to(DEVICES[1])
-#     ).data.cpu().tolist()
-
-def transform(x):
-    return x
+DEVICE = DEVICES[1]
 
 
 class BaselineMetricsExperimentExecutor():
     
-    def __init__(self, embedding_method: str, dataset_id: str, layer: int):
+    def __init__(self, embedding_method: str, dataset_id: str, layer: int, model_id: int=None):
         self.embedding_method = embedding_method
         self.dataset_id       = dataset_id
         self.layer            = layer
         self.topic_ids        = TOPIC_IDS[dataset_id]
+        self.model_id         = model_id
+
+        self.models = [
+            load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_rouge_reg_model', NNRougeRegModel, CONFIG_MODELS['NNRougeRegModel']).to(DEVICE),
+            load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_wavg_pr_model', NNWAvgPRModel, CONFIG_MODELS['NNWAvgPRModel']).to(DEVICE),
+            load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, CONFIG_MODELS['LinSinkhornRegModel']).to(DEVICE),
+            load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, CONFIG_MODELS['LinSinkhornPRModel']).to(DEVICE),
+            load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, CONFIG_MODELS['NNSinkhornPRModel']).to(DEVICE),
+            load_model(self.embedding_method, self.dataset_id, self.layer, 'cond_lin_sinkhorn_pr_model', CondLinSinkhornPRModel, CONFIG_MODELS['CondLinSinkhornPRModel']).to(DEVICE)
+        ]
         
         # Define list of experiments to execute.
         # Every entry needs to contain a label - the experiment name,
@@ -79,13 +74,23 @@ class BaselineMetricsExperimentExecutor():
                 'procedure': self.experiment_lex_rank 
             }]
     
+    def transform(self, x):
+        if self.model_id is None:
+            return x
+
+        assert(self.model_id >= 0 and self.model_id < len(self.models))
+    
+        return self.models[self.model_id].transform(
+            torch.tensor(x, dtype=torch.float).to(DEVICE)
+        ).data.cpu().tolist()
+
     @staticmethod
     @ray.remote
     def load_and_extract(embedding_method: str, dataset_id: str, layer: int, topic_id: str) -> tuple:
         topic = load_embedded_topic(embedding_method, dataset_id, layer, topic_id)
         document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
-        document_embs = transform(document_embs)
-        summary_embs = transform(summary_embs)
+        document_embs = self.transform(document_embs)
+        summary_embs = self.transform(summary_embs)
         return document_embs, summary_embs, indices, pyr_scores, summary_ids
     
     @staticmethod
@@ -135,12 +140,12 @@ class BaselineMetricsExperimentExecutor():
         metric = lambda i: lex_rank(document_embs, summary_embs[i[0]:i[1]], lr_scores)
         return kendalltau(pyr_scores, [metric(i) for i in indices])[0]
     
-    def __execute_experiment(self, experiment: Callable) -> np.array:
+    def __execute_experiment(self, procedure: Callable) -> np.array:
         # Pass 1: Collect the topics
         dataset = [ self.load_and_extract.remote(self.embedding_method, self.dataset_id, self.layer, topic_id)
                        for topic_id in self.topic_ids ]
         # Pass 2: Execute the experiment
-        scores  = [ experiment.remote(topic)
+        scores  = [ procedure.remote(topic)
                        for topic in dataset ]
 
         return ray.get(scores)
@@ -154,7 +159,7 @@ class BaselineMetricsExperimentExecutor():
         # Relevance
         ax2 = fig.add_subplot(2,1,2)
         plot_corr_coeff(ax2, self.topic_ids, self.experiments[3:])
-        fig.savefig(os.path.join(PLOTS_DIR, f'{self.dataset_id}_{self.embedding_method}.png'), dpi=fig.dpi, bbox_inches='tight')
+        fig.savefig(os.path.join(PLOTS_DIR, f'baseline_metrics_{self.dataset_id}_{self.embedding_method}.png'), dpi=fig.dpi, bbox_inches='tight')
           
     def execute(self):
         result = ''
