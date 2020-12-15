@@ -15,13 +15,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Exports embedded items.')
 
-    desc = ', '.join([ '{} - {}'.format(i, embedding_method) for i, embedding_method in enumerate(EMBEDDING_METHODS) ])
+    desc = ', '.join([ '{} - {}'.format(i + 1, embedding_method) for i, embedding_method in enumerate(EMBEDDING_METHODS) ])
 
     parser.add_argument('-em',
                         dest='embedding_method',
                         help='Embedding method: {}'.format(desc),
                         type=int,
-                        choices=range(len(EMBEDDING_METHODS)))
+                        choices=range(1, len(EMBEDDING_METHODS) + 1))
     
     parser.add_argument('-l',
                         dest='layer',
@@ -36,13 +36,13 @@ if __name__ == '__main__':
 
     layer = None
 
-    if args.embedding_method in (3, 5):
+    if args.embedding_method - 1 in (3, 5):
         if args.layer == None:
             raise Exception('Not suitable layer chosen. Use -h for more info.')
         
         layer = args.layer
     
-    embedding_method = EMBEDDING_METHODS[args.embedding_method]
+    embedding_method = EMBEDDING_METHODS[args.embedding_method - 1]
 
     print(embedding_method)
 

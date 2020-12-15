@@ -17,21 +17,21 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='Encodes topic items.')
 
-    desc = ', '.join([ '{} - {}'.format(i, embedding_method) for i, embedding_method in enumerate(EMBEDDING_METHODS) ])
+    desc = ', '.join([ '{} - {}'.format(i + 1, embedding_method) for i, embedding_method in enumerate(EMBEDDING_METHODS) ])
 
     parser.add_argument('-em',
                         dest='embedding_method',
                         help='Embedding method: {}'.format(desc),
                         type=int,
-                        choices=range(len(EMBEDDING_METHODS)))
+                        choices=range(1, len(EMBEDDING_METHODS) + 1))
     
-    desc = ', '.join([ '{} - {}'.format(i, dataset_id) for i, dataset_id in enumerate(DATASET_IDS) ])
+    desc = ', '.join([ '{} - {}'.format(i + 1, dataset_id) for i, dataset_id in enumerate(DATASET_IDS) ])
     
     parser.add_argument('-did',
                         dest='dataset_id',
                         help='Dataset ID: {}'.format(desc),
                         type=int,
-                        choices=range(len(DATASET_IDS)))
+                        choices=range(1, len(DATASET_IDS) + 1))
     
     parser.add_argument('-l',
                         dest='layer',
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     layer = None
 
-    if args.embedding_method in (3, 5):
+    if args.embedding_method - 1 in (3, 5):
         if args.layer == None:
             raise Exception('Not suitable layer chosen. Use -h for more info.')
         
@@ -73,8 +73,8 @@ if __name__ == '__main__':
     if args.procedure == None:
         raise Exception('Not suitable procedure chosen. Use -h for more info.')
     
-    embedding_method = EMBEDDING_METHODS[args.embedding_method]
-    dataset_id = DATASET_IDS[args.dataset_id]
+    embedding_method = EMBEDDING_METHODS[args.embedding_method - 1]
+    dataset_id = DATASET_IDS[args.dataset_id - 1]
 
     procedure = stratified.PROCEDURES[args.procedure - 1]
     if args.crossval:
