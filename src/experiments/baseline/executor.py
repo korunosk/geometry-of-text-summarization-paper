@@ -30,29 +30,32 @@ from src.config import (
     PLOTS_DIR,
     DEVICES
 )
-from src.config_models import CONFIG_MODELS
-
-
-DEVICE = DEVICES[1]
+from src.config_models import make_config_models
 
 
 class BaselineMetricsExperimentExecutor():
     
-    def __init__(self, embedding_method: str, dataset_id: str, layer: int, model_id: int=None):
+    def __init__(self, embedding_method: str, dataset_id: str, layer: int, model_id: int=None, device_id: int=0):
         self.embedding_method = embedding_method
         self.dataset_id       = dataset_id
         self.layer            = layer
         self.topic_ids        = TOPIC_IDS[dataset_id]
-        self.model_id         = model_id
+        self.config_models    = make_config_models(embedding_method, dataset_id)
+        self.device           = DEVICES[device_id]
 
-        self.models = [
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_rouge_reg_model', NNRougeRegModel, CONFIG_MODELS['NNRougeRegModel']).to(DEVICE),
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_wavg_pr_model', NNWAvgPRModel, CONFIG_MODELS['NNWAvgPRModel']).to(DEVICE),
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, CONFIG_MODELS['LinSinkhornRegModel']).to(DEVICE),
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, CONFIG_MODELS['LinSinkhornPRModel']).to(DEVICE),
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, CONFIG_MODELS['NNSinkhornPRModel']).to(DEVICE),
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'cond_lin_sinkhorn_pr_model', CondLinSinkhornPRModel, CONFIG_MODELS['CondLinSinkhornPRModel']).to(DEVICE)
-        ]
+        if model_id is not None:
+            models = [
+                load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_rouge_reg_model', NNRougeRegModel, self.config_models['NNRougeRegModel']).to(self.device),
+                load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_wavg_pr_model', NNWAvgPRModel, self.config_models['NNWAvgPRModel']).to(self.device),
+                load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, self.config_models['LinSinkhornRegModel']).to(self.device),
+                load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, self.config_models['LinSinkhornPRModel']).to(self.device),
+                load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, self.config_models['NNSinkhornPRModel']).to(self.device),
+                load_model(self.embedding_method, self.dataset_id, self.layer, 'cond_lin_sinkhorn_pr_model', CondLinSinkhornPRModel, self.config_models['CondLinSinkhornPRModel']).to(self.device)
+            ]
+            assert(self.model_id >= 0 and self.model_id < len(self.models))
+            self.model = models[model_id]
+        else:
+            self.model = None
         
         # Define list of experiments to execute.
         # Every entry needs to contain a label - the experiment name,
@@ -74,23 +77,22 @@ class BaselineMetricsExperimentExecutor():
                 'procedure': self.experiment_lex_rank 
             }]
     
-    def transform(self, x):
-        if self.model_id is None:
+    @staticmethod
+    def transform(x, model=None):
+        if model is None:
             return x
-
-        assert(self.model_id >= 0 and self.model_id < len(self.models))
     
-        return self.models[self.model_id].transform(
-            torch.tensor(x, dtype=torch.float).to(DEVICE)
+        return model.transform(
+            torch.tensor(x, dtype=torch.float).to(self.device)
         ).data.cpu().tolist()
 
     @staticmethod
     @ray.remote
-    def load_and_extract(embedding_method: str, dataset_id: str, layer: int, topic_id: str) -> tuple:
+    def load_and_extract(embedding_method: str, dataset_id: str, layer: int, topic_id: str, model) -> tuple:
         topic = load_embedded_topic(embedding_method, dataset_id, layer, topic_id)
         document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
-        document_embs = self.transform(document_embs)
-        summary_embs = self.transform(summary_embs)
+        document_embs = BaselineMetricsExperimentExecutor.transform(document_embs, model)
+        summary_embs = BaselineMetricsExperimentExecutor.transform(summary_embs, model)
         return document_embs, summary_embs, indices, pyr_scores, summary_ids
     
     @staticmethod
@@ -142,7 +144,7 @@ class BaselineMetricsExperimentExecutor():
     
     def __execute_experiment(self, procedure: Callable) -> np.array:
         # Pass 1: Collect the topics
-        dataset = [ self.load_and_extract.remote(self.embedding_method, self.dataset_id, self.layer, topic_id)
+        dataset = [ self.load_and_extract.remote(self.embedding_method, self.dataset_id, self.layer, topic_id, self.model)
                        for topic_id in self.topic_ids ]
         # Pass 2: Execute the experiment
         scores  = [ procedure.remote(topic)
@@ -177,7 +179,7 @@ class BaselineMetricsExperimentExecutor():
             
             print('   *** Elapsed: {:}\n'.format(format_time(end - start)))
             
-            result += '{:30} {:.4}\n'.format(label, np.mean(values))
+            result += '{:30} {:.2f}\n'.format(label, np.mean(values))
             
             self.experiments[i]['values'] = values
 

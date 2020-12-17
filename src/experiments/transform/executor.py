@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style('ticks')
 from operator import itemgetter
+from operator import add
 from collections import defaultdict
 from scipy.stats import kendalltau
 from src.implementation.transform.datasets import *
@@ -25,58 +26,79 @@ from src.config import (
     DEVICES,
     PLOTS_DIR
 )
-from src.config_models import CONFIG_MODELS
-from src.config_transformers import TRANSFORMERS
+from src.config_models import make_config_models
+from src.config_transformers import make_config_transformers
 
 
-DEVICE = DEVICES[0]
+class ModelContainer():
 
+    def __init__(self, embedding_method, dataset_id, layer, model_id, Model, config, cv=False, device_id=0):
+        self.cv = cv
+        self.models = []
+        self.device = DEVICES[device_id]
+        
+        if not cv:
+            self.models.append(
+                load_model(embedding_method, dataset_id, layer, model_id, Model, config).to(self.device)
+            )
+        else:
+            for i in range(3):
+                self.models.append(
+                    load_model(embedding_method, dataset_id, layer, f'{model_id}_{i}', Model, config).to(self.device)
+                )
+    
+    def predict(self, d, si, a, ai):
+        n = len(self.models)
+        predictions = self.models[0].predict(d, si, a, ai).cpu().tolist()
+        
+        for i in range(1, n):
+            predictions = list(map(add, self.models[i].predict(d, si, a, ai).cpu().tolist(), predictions))
 
-TRANSFORMERS['NNRougeRegModel'] = {
-    'transform_documents': lambda document_embs: dict(zip(['embs', 'aux'], map(torch.from_numpy, pad_h(document_embs, 650)))),
-    'transform_summary': lambda summary_embs: dict(zip(['embs', 'aux'], map(torch.from_numpy, pad_h(summary_embs, 15))))
-}
+        return list(map(lambda x: x / n, predictions))
 
 
 class TransformExperimentExecutor():
 
-    def __init__(self, embedding_method, dataset_id, layer):
+    def __init__(self, embedding_method, dataset_id, layer, cv=False, device_id=0):
         self.embedding_method = embedding_method
         self.dataset_id = dataset_id
         self.layer = layer
+        self.cv = cv
+        self.config_models = make_config_models(embedding_method, dataset_id)
+        self.transformers = make_config_transformers(embedding_method, dataset_id, True)
 
         self.models = [
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_rouge_reg_model', NNRougeRegModel, CONFIG_MODELS['NNRougeRegModel']).to(DEVICE),
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_wavg_pr_model', NNWAvgPRModel, CONFIG_MODELS['NNWAvgPRModel']).to(DEVICE),
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, CONFIG_MODELS['LinSinkhornRegModel']).to(DEVICE),
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, CONFIG_MODELS['LinSinkhornPRModel']).to(DEVICE),
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, CONFIG_MODELS['NNSinkhornPRModel']).to(DEVICE),
-            load_model(self.embedding_method, self.dataset_id, self.layer, 'cond_lin_sinkhorn_pr_model', CondLinSinkhornPRModel, CONFIG_MODELS['CondLinSinkhornPRModel']).to(DEVICE)
+            ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'nn_rouge_reg_model', NNRougeRegModel, self.config_models['NNRougeRegModel'], self.cv, device_id),
+            ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'nn_wavg_pr_model', NNWAvgPRModel, self.config_models['NNWAvgPRModel'], self.cv, device_id),
+            ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, self.config_models['LinSinkhornRegModel'], self.cv, device_id),
+            ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, self.config_models['LinSinkhornPRModel'], self.cv, device_id),
+            ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, self.config_models['NNSinkhornPRModel'], self.cv, device_id),
+            ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'cond_lin_sinkhorn_pr_model', CondLinSinkhornPRModel, self.config_models['CondLinSinkhornPRModel'], self.cv, device_id)
         ]
 
         self.experiments = [{
                 'label': 'NNRougeRegModel',
-                'transformer': TRANSFORMERS['NNRougeRegModel'], 
+                'transformer': self.transformers['NNRougeRegModel'], 
                 'procedure': lambda dataset: self.experiment(self.models[0], dataset)
             }, {
                 'label': 'NNWAvgPRModel',
-                'transformer': TRANSFORMERS['NNWAvgPRModel'], 
+                'transformer': self.transformers['NNWAvgPRModel'], 
                 'procedure': lambda dataset: self.experiment(self.models[1], dataset)
             }, {
                 'label': 'LinSinkhornRegModel',
-                'transformer': TRANSFORMERS['LinSinkhornRegModel'], 
+                'transformer': self.transformers['LinSinkhornRegModel'], 
                 'procedure': lambda dataset: self.experiment(self.models[2], dataset)
             }, {
                 'label': 'LinSinkhornPRModel',
-                'transformer': TRANSFORMERS['LinSinkhornPRModel'], 
+                'transformer': self.transformers['LinSinkhornPRModel'], 
                 'procedure': lambda dataset: self.experiment(self.models[3], dataset)
             }, {
                 'label': 'NNSinkhornPRModel',
-                'transformer': TRANSFORMERS['NNSinkhornPRModel'], 
+                'transformer': self.transformers['NNSinkhornPRModel'], 
                 'procedure': lambda dataset: self.experiment(self.models[4], dataset)
             }, {
                 'label': 'CondLinSinkhornPRModel',
-                'transformer': TRANSFORMERS['CondLinSinkhornPRModel'], 
+                'transformer': self.transformers['CondLinSinkhornPRModel'], 
                 'procedure': lambda dataset: self.experiment(self.models[5], dataset)
             }]
     
@@ -99,10 +121,10 @@ class TransformExperimentExecutor():
         d = data['documents']['embs'].unsqueeze(0).repeat(si.shape[0], 1, 1)
         a = data['documents']['aux'].repeat(ai.shape[0], 1)
         y = data['pyr_scores']
-        y_hat = model.predict(d.to(DEVICE),
-                              si.to(DEVICE),
-                              a.to(DEVICE),
-                              ai.to(DEVICE)).cpu().tolist()
+        y_hat = model.predict(d.to(self.device),
+                              si.to(self.device),
+                              a.to(self.device),
+                              ai.to(self.device))
         return kendalltau(y, y_hat)[0]
 
     def __execute_experiment(self, transformer, procedure):
@@ -131,7 +153,7 @@ class TransformExperimentExecutor():
         ax.set_xlabel('Topic')
         ax.set_ylabel('Kendall tau')
         ax.legend(loc='upper right')
-        fig.savefig(os.path.join(PLOTS_DIR, f'transform_correlation_{self.dataset_id}_{self.embedding_method}.png'), dpi=fig.dpi, bbox_inches='tight')
+        fig.savefig(os.path.join(PLOTS_DIR, f'transform_correlation_{self.dataset_id}_{self.embedding_method}' + ( '_cv' if self.cv else '' ) + '.png'), dpi=fig.dpi, bbox_inches='tight')
 
     def execute(self):
         result = ''
@@ -150,11 +172,11 @@ class TransformExperimentExecutor():
             
             print('   *** Elapsed: {:}\n'.format(format_time(end - start)))
             
-            result += '{:30} {:.4}\n'.format(label, np.mean(values))
+            result += '{:30} {:.2f}\n'.format(label, np.mean(values))
             
             self.experiments[i]['values'] = values
         
         print('\n=== Results ===\n')
         print(result)
 
-        self.__generate_plots()
+        # self.__generate_plots()
