@@ -7,6 +7,8 @@ from src.config import (
 
 if __name__ == '__main__':
 
-    ex0 = TransformExperimentExecutor(EMBEDDING_METHODS[4], DATASET_IDS[0], None)
+    device_id = 0
+
+    ex0 = TransformExperimentExecutor(EMBEDDING_METHODS[3], DATASET_IDS[2], 11, False, device_id)
 
     ex0.execute()
