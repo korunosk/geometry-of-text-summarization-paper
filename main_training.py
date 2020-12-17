@@ -81,6 +81,9 @@ if __name__ == '__main__':
     
     if args.procedure == None:
         raise Exception('Not suitable procedure chosen. Use -h for more info.')
+
+    if args.device_id == None:
+        raise Exception('Not suitable device chosen. Use -h for more info.')
     
     embedding_method = EMBEDDING_METHODS[args.embedding_method - 1]
     dataset_id = DATASET_IDS[args.dataset_id - 1]
