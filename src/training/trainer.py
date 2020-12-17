@@ -17,11 +17,11 @@ from src.config import (
     BATCH_SIZE_VAL,
     DEVICES
 )
-from src.config_models import CONFIG_MODELS
-from src.config_transformers import TRANSFORMERS
+from src.config_models import make_config_models
+from src.config_transformers import make_config_transformers
 
 
-DEVICE = DEVICES[0]
+SHOULD_EVAL = False
 
 
 class ModelTrainer():
@@ -38,7 +38,7 @@ class ModelTrainer():
             
             y_hat = (y_hat > 0.5).type(torch.bool)
 
-            auc += torch.sum(y_hat == y.type(torch.bool).to(DEVICE)).type(torch.float)
+            auc += torch.sum(y_hat == y.type(torch.bool).to(self.device)).type(torch.float)
         
         return auc.cpu().numpy() / len(dataset_val)
     
@@ -52,37 +52,47 @@ class ModelTrainer():
 
             y_hat = forward(batch)
             
-            mse += torch.sum(torch.pow(y_hat - y.to(DEVICE), 2))
+            mse += torch.sum(torch.pow(y_hat - y.to(self.device), 2))
         
         return np.sqrt(mse.cpu().numpy() / len(dataset_val))
 
     def load_dataset(self, transformer):
+        max_document_len = 0
+        max_summary_len = 0
         dataset = defaultdict(defaultdict)
         for topic_id in TOPIC_IDS[self.dataset_id]:
             topic = load_embedded_topic(self.embedding_method, self.dataset_id, self.layer, topic_id)
             document_embs, summary_embs, indices, pyr_scores, summary_ids = extract_topic_data(topic)
+            max_document_len = max(max_document_len, len(document_embs))
             dataset[topic_id]['documents'] = transformer['transform_documents'](document_embs)
             dataset[topic_id]['summaries'] = defaultdict(defaultdict)
             for i, idx in enumerate(indices):
+                max_summary_len = max(max_summary_len, len(summary_embs[idx[0]:idx[1]]))
                 dataset[topic_id]['summaries'][summary_ids[i]] = \
                     transformer['transform_summary'](summary_embs[idx[0]:idx[1]])
             dataset[topic_id]['pyr_scores'] = pyr_scores
+        print(' *** Stats *** ')
+        print(f'Maximum document length: {max_document_len}')
+        print(f'Maximum summary length:  {max_summary_len}')
         return dataset
 
-    def __init__(self, embedding_method, dataset_id, layer):
+    def __init__(self, embedding_method, dataset_id, layer, device_id=0):
         self.embedding_method = embedding_method
         self.dataset_id = dataset_id
         self.layer = layer
+        self.config_models = make_config_models(embedding_method, dataset_id)
+        self.transformers = make_config_transformers(embedding_method, dataset_id, False)
+        self.device = DEVICES[device_id]
 
     def train_nn_rouge_reg_model(self, train, val):
-        config = CONFIG_MODELS['NNRougeRegModel']
+        config = self.config_models['NNRougeRegModel']
 
-        dataset = self.load_dataset(TRANSFORMERS['NNRougeRegModel'])
+        dataset = self.load_dataset(self.transformers['NNRougeRegModel'])
 
         dataset_train = TACDatasetRegressionRouge(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-        model = NNRougeRegModel(config).to(DEVICE)
+        model = NNRougeRegModel(config).to(self.device)
 
         criterion = nn.MSELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
@@ -90,7 +100,7 @@ class ModelTrainer():
         def forward(batch):
             e, y = batch
 
-            return model(e.to(DEVICE))
+            return model(e.to(self.device))
 
         loss = []
 
@@ -102,7 +112,7 @@ class ModelTrainer():
 
                 y_hat = forward(batch)
 
-                L = criterion(y_hat, -torch.log(y + 1e-8).to(DEVICE))
+                L = criterion(y_hat, -torch.log(y + 1e-8).to(self.device))
 
                 L.backward()
                 optimizer.step()
@@ -112,9 +122,10 @@ class ModelTrainer():
 
                 print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
             
-            with torch.no_grad():
-                dataset_val = TACDatasetRegressionRouge(dataset, val)
-                print(f'RMSE: {self.rmse(forward, dataset_val):.4f}')
+            if SHOULD_EVAL:
+                with torch.no_grad():
+                    dataset_val = TACDatasetRegressionRouge(dataset, val)
+                    print(f'RMSE: {self.rmse(forward, dataset_val):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
@@ -124,14 +135,14 @@ class ModelTrainer():
         return model
 
     def train_nn_wavg_pr_model(self, train, val):
-        config = CONFIG_MODELS['NNWAvgPRModel']
+        config = self.config_models['NNWAvgPRModel']
 
-        dataset = self.load_dataset(TRANSFORMERS['NNWAvgPRModel'])
+        dataset = self.load_dataset(self.transformers['NNWAvgPRModel'])
 
         dataset_train = TACDatasetClassification(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-        model = NNWAvgPRModel(config).to(DEVICE)
+        model = NNWAvgPRModel(config).to(self.device)
 
         criterion = nn.BCELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
@@ -140,11 +151,11 @@ class ModelTrainer():
             d, si, sj, m, mi, mj, y = batch
 
             return model(
-                d.to(DEVICE),
-                si.to(DEVICE),
-                sj.to(DEVICE),
-                mi.to(DEVICE),
-                mj.to(DEVICE)
+                d.to(self.device),
+                si.to(self.device),
+                sj.to(self.device),
+                mi.to(self.device),
+                mj.to(self.device)
             )
 
         loss = []
@@ -157,7 +168,7 @@ class ModelTrainer():
 
                 y_hat = forward(batch)
 
-                L = criterion(y_hat, y.to(DEVICE))
+                L = criterion(y_hat, y.to(self.device))
 
                 L.backward()
                 optimizer.step()
@@ -167,9 +178,10 @@ class ModelTrainer():
 
                 print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
             
-            with torch.no_grad():
-                dataset_val = TACDatasetClassification(dataset, val)
-                print(f'AUC: {self.accuracy(forward, dataset_val):.4f}')
+            if SHOULD_EVAL:
+                with torch.no_grad():
+                    dataset_val = TACDatasetClassification(dataset, val)
+                    print(f'AUC: {self.accuracy(forward, dataset_val):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
@@ -179,14 +191,14 @@ class ModelTrainer():
         return model
 
     def train_lin_sinkhorn_reg_model(self, train, val):
-        config = CONFIG_MODELS['LinSinkhornRegModel']
+        config = self.config_models['LinSinkhornRegModel']
         
-        dataset = self.load_dataset(TRANSFORMERS['LinSinkhornRegModel'])
+        dataset = self.load_dataset(self.transformers['LinSinkhornRegModel'])
         
         dataset_train = TACDatasetRegression(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-        model = LinSinkhornRegModel(config).to(DEVICE)
+        model = LinSinkhornRegModel(config).to(self.device)
 
         criterion = nn.MSELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
@@ -195,10 +207,10 @@ class ModelTrainer():
             d, si, h, hi, y = batch
 
             return model(
-                d.to(DEVICE),
-                si.to(DEVICE),
-                h.to(DEVICE),
-                hi.to(DEVICE),
+                d.to(self.device),
+                si.to(self.device),
+                h.to(self.device),
+                hi.to(self.device),
             )
 
         loss = []
@@ -211,7 +223,7 @@ class ModelTrainer():
                 
                 y_hat = forward(batch)
                 
-                L = criterion(y_hat, y.to(DEVICE))
+                L = criterion(y_hat, y.to(self.device))
                 
                 L.backward()
                 optimizer.step()
@@ -221,9 +233,10 @@ class ModelTrainer():
                 
                 print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
             
-            with torch.no_grad():
-                dataset_val = TACDatasetRegression(dataset, val)
-                print(f'RMSE: {self.rmse(forward, dataset_val):.4f}')
+            if SHOULD_EVAL:
+                with torch.no_grad():
+                    dataset_val = TACDatasetRegression(dataset, val)
+                    print(f'RMSE: {self.rmse(forward, dataset_val):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
@@ -233,14 +246,14 @@ class ModelTrainer():
         return model
 
     def train_lin_sinkhorn_pr_model(self, train, val):
-        config = CONFIG_MODELS['LinSinkhornPRModel']
+        config = self.config_models['LinSinkhornPRModel']
 
-        dataset = self.load_dataset(TRANSFORMERS['LinSinkhornPRModel'])
+        dataset = self.load_dataset(self.transformers['LinSinkhornPRModel'])
         
         dataset_train = TACDatasetClassification(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-        model = LinSinkhornPRModel(config).to(DEVICE)
+        model = LinSinkhornPRModel(config).to(self.device)
 
         criterion = nn.BCELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
@@ -249,12 +262,12 @@ class ModelTrainer():
             d, si, sj, h, hi, hj, y = batch
 
             return model(
-                d.to(DEVICE),
-                si.to(DEVICE),
-                sj.to(DEVICE),
-                h.to(DEVICE),
-                hi.to(DEVICE),
-                hj.to(DEVICE)
+                d.to(self.device),
+                si.to(self.device),
+                sj.to(self.device),
+                h.to(self.device),
+                hi.to(self.device),
+                hj.to(self.device)
             )
 
         loss = []
@@ -267,7 +280,7 @@ class ModelTrainer():
                 
                 y_hat = forward(batch)
                 
-                L = criterion(y_hat, y.to(DEVICE))
+                L = criterion(y_hat, y.to(self.device))
                 
                 L.backward()
                 optimizer.step()
@@ -277,9 +290,10 @@ class ModelTrainer():
                 
                 print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
             
-            with torch.no_grad():
-                dataset_val = TACDatasetClassification(dataset, val)
-                print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
+            if SHOULD_EVAL:
+                with torch.no_grad():
+                    dataset_val = TACDatasetClassification(dataset, val)
+                    print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
@@ -289,14 +303,14 @@ class ModelTrainer():
         return model
 
     def train_nn_sinkhorn_pr_model(self, train, val):
-        config = CONFIG_MODELS['NNSinkhornPRModel']
+        config = self.config_models['NNSinkhornPRModel']
 
-        dataset = self.load_dataset(TRANSFORMERS['NNSinkhornPRModel'])
+        dataset = self.load_dataset(self.transformers['NNSinkhornPRModel'])
         
         dataset_train = TACDatasetClassification(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-        model = NNSinkhornPRModel(config).to(DEVICE)
+        model = NNSinkhornPRModel(config).to(self.device)
 
         criterion = nn.BCELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
@@ -305,12 +319,12 @@ class ModelTrainer():
             d, si, sj, h, hi, hj, y = batch
 
             return model(
-                d.to(DEVICE),
-                si.to(DEVICE),
-                sj.to(DEVICE),
-                h.to(DEVICE),
-                hi.to(DEVICE),
-                hj.to(DEVICE)
+                d.to(self.device),
+                si.to(self.device),
+                sj.to(self.device),
+                h.to(self.device),
+                hi.to(self.device),
+                hj.to(self.device)
             )
 
         loss = []
@@ -323,7 +337,7 @@ class ModelTrainer():
                 
                 y_hat = forward(batch)
                 
-                L = criterion(y_hat, y.to(DEVICE))
+                L = criterion(y_hat, y.to(self.device))
                 
                 L.backward()
                 optimizer.step()
@@ -332,10 +346,11 @@ class ModelTrainer():
                 loss.append(L.item())
                 
                 print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
-            
-            with torch.no_grad():
-                dataset_val = TACDatasetClassification(dataset, val)
-                print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
+
+            if SHOULD_EVAL:
+                with torch.no_grad():
+                    dataset_val = TACDatasetClassification(dataset, val)
+                    print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
@@ -345,14 +360,14 @@ class ModelTrainer():
         return model
 
     def train_cond_lin_sinkhorn_pr_model(self, train, val):
-        config = CONFIG_MODELS['CondLinSinkhornPRModel']
+        config = self.config_models['CondLinSinkhornPRModel']
 
-        dataset = self.load_dataset(TRANSFORMERS['CondLinSinkhornPRModel'])
+        dataset = self.load_dataset(self.transformers['CondLinSinkhornPRModel'])
         
         dataset_train = TACDatasetClassification(dataset, train)
         data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
 
-        model = CondLinSinkhornPRModel(config).to(DEVICE)
+        model = CondLinSinkhornPRModel(config).to(self.device)
 
         criterion = nn.BCELoss()
         optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
@@ -361,12 +376,12 @@ class ModelTrainer():
             d, si, sj, h, hi, hj, y = batch
 
             return model(
-                d.to(DEVICE),
-                si.to(DEVICE),
-                sj.to(DEVICE),
-                h.to(DEVICE),
-                hi.to(DEVICE),
-                hj.to(DEVICE)
+                d.to(self.device),
+                si.to(self.device),
+                sj.to(self.device),
+                h.to(self.device),
+                hi.to(self.device),
+                hj.to(self.device)
             )
 
         loss = []
@@ -379,7 +394,7 @@ class ModelTrainer():
                 
                 y_hat = forward(batch)
                 
-                L = criterion(y_hat, y.to(DEVICE))
+                L = criterion(y_hat, y.to(self.device))
                 
                 L.backward()
                 optimizer.step()
@@ -389,9 +404,10 @@ class ModelTrainer():
                 
                 print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
             
-            with torch.no_grad():
-                dataset_val = TACDatasetClassification(dataset, val)
-                print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
+            if SHOULD_EVAL:
+                with torch.no_grad():
+                    dataset_val = TACDatasetClassification(dataset, val)
+                    print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
