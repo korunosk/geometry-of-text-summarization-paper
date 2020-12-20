@@ -3,36 +3,42 @@ from src.config import EMBEDDING_METHODS
 
 def make_config_models(embedding_method, dataset_id):
     PARAMETERS = {
+        # LSA
         EMBEDDING_METHODS[0]: {
             'EMBEDDING_SIZE': 300,
             'BATCH_SIZE': 128,
             'EPOCHS': 5
-        }, # LSA
+        },
+        # GloVe
         EMBEDDING_METHODS[1]: {
             'EMBEDDING_SIZE': 300,
             'BATCH_SIZE': 128,
             'EPOCHS': 5
-        }, # GloVe
+        },
+        # fasttext
         EMBEDDING_METHODS[2]: {
             'EMBEDDING_SIZE': 300,
             'BATCH_SIZE': 128,
             'EPOCHS': 5
-        }, # fasttext
+        },
+        # BERT_word
         EMBEDDING_METHODS[3]: {
             'EMBEDDING_SIZE': 768,
             'BATCH_SIZE': 32 if dataset_id == 2 else 4,
             'EPOCHS': 5
-        }, # BERT_word
+        },
+        # BERT_sent
         EMBEDDING_METHODS[4]: {
             'EMBEDDING_SIZE': 768,
             'BATCH_SIZE': 128,
             'EPOCHS': 5
-        }, # BERT_sent
+        },
+        # BART_word
         EMBEDDING_METHODS[5]: {
             'EMBEDDING_SIZE': 1024,
             'BATCH_SIZE': 32 if dataset_id == 2 else 4,
             'EPOCHS': 5
-        }, # BART_word
+        },
     }
 
     return {

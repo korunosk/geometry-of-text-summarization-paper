@@ -9,30 +9,36 @@ from src.implementation.transform.datasets import (
 
 def make_config_transformers(embedding_method, dataset_id, exec):
     PARAMETERS = {
+        # LSA
         EMBEDDING_METHODS[0]: {
             'PADDING_DOCUMENTS': None,
             'PADDING_SUMMARY': None
-        }, # LSA
+        },
+        # GloVe
         EMBEDDING_METHODS[1]: {
             'PADDING_DOCUMENTS': None,
             'PADDING_SUMMARY': None
-        }, # GloVe
+        },
+        # fasttext
         EMBEDDING_METHODS[2]: {
             'PADDING_DOCUMENTS': None,
             'PADDING_SUMMARY': None
-        }, # fasttext
+        },
+        # BERT_word
         EMBEDDING_METHODS[3]: {
             'PADDING_DOCUMENTS': 1200 if dataset_id == 2 else 8850,
             'PADDING_SUMMARY': 110 if dataset_id == 2 else 130
-        }, # BERT_word
+        },
+        # BERT_sent
         EMBEDDING_METHODS[4]: {
             'PADDING_DOCUMENTS': 650,
             'PADDING_SUMMARY': 15
-        }, # BERT_sent
+        },
+        # BART_WORD
         EMBEDDING_METHODS[5]: {
             'PADDING_DOCUMENTS': 1200 if dataset_id == 2 else 8850,
             'PADDING_SUMMARY': 110 if dataset_id == 2 else 130
-        }, # BART_WORD
+        },
     }
 
     TRANSFORMERS = {
