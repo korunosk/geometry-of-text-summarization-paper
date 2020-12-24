@@ -114,8 +114,9 @@ class AvgModel(nn.Module):
         self.D = D
         self.layer = nn.Linear(self.D, self.D ** 2)
     
-    def forward(self, d):
-        M = F.relu(self.layer(d.mean(axis=1)))
+    def forward(self, d, h):
+        dm = torch.sum(d * h.unsqueeze(2), axis=1)
+        M = F.relu(self.layer(dm))
         return M.reshape(-1, self.D, self.D)
 
 
@@ -133,11 +134,11 @@ class CondLinSinkhornPRModel(nn.Module):
 
     def predict(self, d, si, h, hi, M=None):
         if M is None:
-            M = self.model(d)
+            M = self.model(d, h)
         return self.sinkhorn(h, self.transform(d, M), hi, self.transform(si, M))
 
     def forward(self, d, si, sj, h, hi, hj):
-        M = self.model(d)
+        M = self.model(d, h)
         dist1 = self.predict(d, si, h, hi, M)
         dist2 = self.predict(d, sj, h, hj, M)
         return self.sigm(self.config['scaling_factor'] * (dist2 - dist1))
