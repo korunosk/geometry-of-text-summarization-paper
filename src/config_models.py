@@ -94,7 +94,7 @@ def make_config_models(embedding_method, dataset_id):
             'blur': 0.05,
             'scaling': 0.9,
             'scaling_factor': 1,
-            'learning_rate': 0.01,
+            'learning_rate': 0.003,
             'batch_size': PARAMETERS[embedding_method]['BATCH_SIZE'],
             'epochs': PARAMETERS[embedding_method]['EPOCHS']
         },

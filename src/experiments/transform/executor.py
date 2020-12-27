@@ -66,6 +66,7 @@ class TransformExperimentExecutor():
         self.cv = cv
         self.config_models = make_config_models(embedding_method, dataset_id)
         self.transformers = make_config_transformers(embedding_method, dataset_id, True)
+        self.device = DEVICES[device_id]
 
         self.models = [
             ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'nn_rouge_reg_model', NNRougeRegModel, self.config_models['NNRougeRegModel'], self.cv, device_id),

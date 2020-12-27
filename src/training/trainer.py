@@ -293,7 +293,7 @@ class ModelTrainer():
             if SHOULD_EVAL:
                 with torch.no_grad():
                     dataset_val = TACDatasetClassification(dataset, val)
-                    print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
+                    print(f'AUC: {self.accuracy(forward, dataset_val, 128):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
@@ -350,7 +350,7 @@ class ModelTrainer():
             if SHOULD_EVAL:
                 with torch.no_grad():
                     dataset_val = TACDatasetClassification(dataset, val)
-                    print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
+                    print(f'AUC: {self.accuracy(forward, dataset_val, 128):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
@@ -407,7 +407,7 @@ class ModelTrainer():
             if SHOULD_EVAL:
                 with torch.no_grad():
                     dataset_val = TACDatasetClassification(dataset, val)
-                    print(f'AUC: {self.accuracy(forward, dataset_val, 256):.4f}')
+                    print(f'AUC: {self.accuracy(forward, dataset_val, 128):.4f}')
 
         # fig = plt.figure(figsize=(10,5))
         # ax = fig.add_subplot(1,1,1)
