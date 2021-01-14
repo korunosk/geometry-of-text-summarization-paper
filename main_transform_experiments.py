@@ -41,7 +41,7 @@ if __name__ == '__main__':
         raise Exception('Not suitable device chosen. Use -h for more info.')
 
     layer = args.layer
-    device_id = args.device_id
+    device_id = args.device_id - 1
     cv = args.crossval
 
     models = [
@@ -50,7 +50,10 @@ if __name__ == '__main__':
         TransformExperimentExecutor(EMBEDDING_METHODS[3], DATASET_IDS[2], layer, cv, device_id),
         TransformExperimentExecutor(EMBEDDING_METHODS[4], DATASET_IDS[0],  None, cv, device_id),
         TransformExperimentExecutor(EMBEDDING_METHODS[4], DATASET_IDS[1],  None, cv, device_id),
-        TransformExperimentExecutor(EMBEDDING_METHODS[4], DATASET_IDS[2],  None, cv, device_id)
+        TransformExperimentExecutor(EMBEDDING_METHODS[4], DATASET_IDS[2],  None, cv, device_id),
+        TransformExperimentExecutor(EMBEDDING_METHODS[5], DATASET_IDS[0], layer, cv, device_id),
+        TransformExperimentExecutor(EMBEDDING_METHODS[5], DATASET_IDS[1], layer, cv, device_id),
+        TransformExperimentExecutor(EMBEDDING_METHODS[5], DATASET_IDS[2], layer, cv, device_id),
     ]
 
     for model in models:

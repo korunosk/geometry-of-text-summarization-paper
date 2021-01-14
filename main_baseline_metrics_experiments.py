@@ -35,7 +35,7 @@ if __name__ == '__main__':
         raise Exception('Not suitable device chosen. Use -h for more info.')
 
     layer = args.layer
-    device_id = args.device_id
+    device_id = args.device_id - 1
 
     models = [
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[0], DATASET_IDS[0],  None, None, device_id),
