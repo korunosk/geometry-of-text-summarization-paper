@@ -114,8 +114,13 @@ class AvgModel(nn.Module):
         self.D = D
         self.layer = nn.Linear(self.D, self.D ** 2)
     
-    def forward(self, d, h):
-        dm = torch.sum(d * h.unsqueeze(2), axis=1)
+    def forward(self, avg, *args):
+        if avg: # If already averaged (CondNNWAvgPRModel)
+            d, = args
+            dm = d[:,0,:] # The first element at dim 1 is repeated
+        else:   # If not already averaged (CondLinSinkhornPRModel)
+            d, h = args
+            dm = torch.sum(d * h.unsqueeze(2), axis=1)
         M = F.relu(self.layer(dm))
         return M.reshape(-1, self.D, self.D)
 
@@ -130,7 +135,7 @@ class CondLinSinkhornPRModel(nn.Module):
         self.sigm = nn.Sigmoid()
 
     def generate_transformation(self, d, h):
-        return self.model(d, h)
+        return self.model(False, d, h)
     
     def transform(self, x, M):
         return torch.bmm(x, M)
@@ -145,3 +150,32 @@ class CondLinSinkhornPRModel(nn.Module):
         dist1 = self.predict(d, si, h, hi, M)
         dist2 = self.predict(d, sj, h, hj, M)
         return self.sigm(self.config['scaling_factor'] * (dist2 - dist1))
+
+
+class CondNNWAvgPRModel(nn.Module):
+
+    def __init__(self, config):
+        super(CondNNWAvgPRModel, self).__init__()
+        self.config = config
+        self.model = AvgModel(self.config['D'])
+        self.layer = nn.Linear(self.config['H'], 1)
+        self.sigm = nn.Sigmoid()
+    
+    def generate_transformation(self, d):
+        return self.model(True, d)
+
+    def transform(self, x, M):
+        return torch.bmm(x, M)
+
+    def predict(self, d, si, m, mi, M=None):
+        if M is None:
+            M = self.generate_transformation(d)
+        x = torch.cat((self.transform(d, M), self.transform(si, M)), axis=2)
+        z = self.layer(x).squeeze()
+        return torch.stack([ torch.sum(z[i].masked_select(mi[i])) for i in range(z.shape[0]) ])
+
+    def forward(self, d, si, sj, mi, mj):
+        M = self.generate_transformation(d)
+        score1 = self.predict(d, si, None, mi)
+        score2 = self.predict(d, sj, None, mj)
+        return self.sigm(self.config['scaling_factor'] * (score1 - score2))

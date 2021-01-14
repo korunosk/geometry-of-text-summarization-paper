@@ -65,7 +65,11 @@ def make_config_transformers(embedding_method, dataset_id, exec):
         'CondLinSinkhornPRModel': {
             'transform_documents': lambda document_embs: dict(zip(['embs', 'aux'], map(torch.from_numpy, pad_h(document_embs, PARAMETERS[embedding_method]['PADDING_DOCUMENTS'])))),
             'transform_summary': lambda summary_embs: dict(zip(['embs', 'aux'], map(torch.from_numpy, pad_h(summary_embs, PARAMETERS[embedding_method]['PADDING_SUMMARY']))))
-        }
+        },
+        'CondNNWAvgPRModel': {
+            'transform_documents': lambda document_embs: dict(zip(['embs', 'aux'], map(torch.from_numpy, repeat_mean(document_embs, PARAMETERS[embedding_method]['PADDING_SUMMARY'])))),
+            'transform_summary': lambda summary_embs: dict(zip(['embs', 'aux'], map(torch.from_numpy, pad(summary_embs, PARAMETERS[embedding_method]['PADDING_SUMMARY']))))
+        },
     }
 
     # For NNRougeRegModel transformers, to get the

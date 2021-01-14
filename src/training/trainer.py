@@ -415,3 +415,59 @@ class ModelTrainer():
         # plt.show()
 
         return model
+    
+    def train_cond_nn_wavg_pr_model(self, train, val):
+        config = self.config_models['CondNNWAvgPRModel']
+
+        dataset = self.load_dataset(self.transformers['CondNNWAvgPRModel'])
+
+        dataset_train = TACDatasetClassification(dataset, train)
+        data_loader_train = DataLoader(dataset_train, batch_size=config['batch_size'], shuffle=True)
+
+        model = CondNNWAvgPRModel(config).to(self.device)
+
+        criterion = nn.BCELoss()
+        optimizer = optim.SGD(model.parameters(), lr=config['learning_rate'])
+
+        def forward(batch):
+            d, si, sj, m, mi, mj, y = batch
+
+            return model(
+                d.to(self.device),
+                si.to(self.device),
+                sj.to(self.device),
+                mi.to(self.device),
+                mj.to(self.device)
+            )
+
+        loss = []
+
+        for epoch in range(config['epochs']):
+            print(f'Epoch {epoch + 1}')
+
+            for i, batch in enumerate(data_loader_train):
+                d, si, sj, m, mi, mj, y = batch
+
+                y_hat = forward(batch)
+
+                L = criterion(y_hat, y.to(self.device))
+
+                L.backward()
+                optimizer.step()
+                optimizer.zero_grad()
+
+                loss.append(L.item())
+
+                print(f'{100 * float(i + 1) / len(data_loader_train):>6.2f}% complete - Train Loss: {loss[-1]:.4f}')
+            
+            if SHOULD_EVAL:
+                with torch.no_grad():
+                    dataset_val = TACDatasetClassification(dataset, val)
+                    print(f'AUC: {self.accuracy(forward, dataset_val):.4f}')
+
+        # fig = plt.figure(figsize=(10,5))
+        # ax = fig.add_subplot(1,1,1)
+        # plot_loss(ax, loss)
+        # plt.show()
+
+        return model

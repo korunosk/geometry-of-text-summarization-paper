@@ -72,11 +72,23 @@ def train_model_6(embedding_method, dataset_id, layer, device_id):
     save_model(embedding_method, dataset_id, layer, 'cond_lin_sinkhorn_pr_model', model)
 
 
+def train_model_7(embedding_method, dataset_id, layer, device_id):
+    data = load_train_data(dataset_id, 'classification')
+    train, val = stratified_sampling(data)
+    print(len(train), len(val))
+
+    trainer = ModelTrainer(embedding_method, dataset_id, layer, device_id)
+    model = trainer.train_cond_nn_wavg_pr_model(train, val)
+
+    save_model(embedding_method, dataset_id, layer, 'cond_nn_wavg_pr_model', model)
+
+
 PROCEDURES = [
     train_model_1,
     train_model_2,
     train_model_3,
     train_model_4,
     train_model_5,
-    train_model_6
+    train_model_6,
+    train_model_7
 ]

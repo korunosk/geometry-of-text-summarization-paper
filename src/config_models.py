@@ -98,4 +98,12 @@ def make_config_models(embedding_method, dataset_id):
             'batch_size': PARAMETERS[embedding_method]['BATCH_SIZE'],
             'epochs': PARAMETERS[embedding_method]['EPOCHS']
         },
+        'CondNNWAvgPRModel': {
+            'D': PARAMETERS[embedding_method]['EMBEDDING_SIZE'],
+            'H': 2 * PARAMETERS[embedding_method]['EMBEDDING_SIZE'],
+            'scaling_factor': 1,
+            'learning_rate': 0.01,
+            'batch_size': PARAMETERS[embedding_method]['BATCH_SIZE'],
+            'epochs': PARAMETERS[embedding_method]['EPOCHS']
+        },
     }
