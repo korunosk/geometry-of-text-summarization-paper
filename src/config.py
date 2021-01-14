@@ -84,5 +84,6 @@ PLOTS_DIR       = os.path.join(BASE_DATA_DIR, 'plots')
 
 DEVICES = [
     torch.device('cuda:0'),
-    torch.device('cuda:1')
+    torch.device('cuda:1'),
+    torch.device('cpu')
 ]
