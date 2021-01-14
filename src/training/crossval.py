@@ -6,7 +6,7 @@ from src.util.loaders import (
 )
 
 
-def train_model_1(embedding_method, dataset_id, layer, device_id):
+def train_nn_rouge_reg_model(embedding_method, dataset_id, layer, device_id):
     data = load_train_data(dataset_id, 'regression_rouge')
     for i, train, val in cross_validation_sampling(data):
         print(len(train), len(val))
@@ -19,7 +19,7 @@ def train_model_1(embedding_method, dataset_id, layer, device_id):
         save_model(embedding_method, dataset_id, layer, f'nn_rouge_reg_model_{i}', model)
 
 
-def train_model_2(embedding_method, dataset_id, layer, device_id):
+def train_nn_wavg_pr_model(embedding_method, dataset_id, layer, device_id):
     data = load_train_data(dataset_id, 'classification')
     for i, train, val in cross_validation_sampling(data):
         print(len(train), len(val))
@@ -32,7 +32,7 @@ def train_model_2(embedding_method, dataset_id, layer, device_id):
         save_model(embedding_method, dataset_id, layer, f'nn_wavg_pr_model_{i}', model)
 
 
-def train_model_3(embedding_method, dataset_id, layer, device_id):
+def train_lin_sinkhorn_reg_model(embedding_method, dataset_id, layer, device_id):
     data = load_train_data(dataset_id, 'regression')
     for i, train, val in cross_validation_sampling(data):
         print(len(train), len(val))
@@ -45,7 +45,7 @@ def train_model_3(embedding_method, dataset_id, layer, device_id):
         save_model(embedding_method, dataset_id, layer, f'lin_sinkhorn_reg_model_{i}', model)
 
 
-def train_model_4(embedding_method, dataset_id, layer, device_id):
+def train_lin_sinkhorn_pr_model(embedding_method, dataset_id, layer, device_id):
     data = load_train_data(dataset_id, 'classification')
     for i, train, val in cross_validation_sampling(data):
         print(len(train), len(val))
@@ -58,7 +58,7 @@ def train_model_4(embedding_method, dataset_id, layer, device_id):
         save_model(embedding_method, dataset_id, layer, f'lin_sinkhorn_pr_model_{i}', model)
 
 
-def train_model_5(embedding_method, dataset_id, layer, device_id):
+def train_nn_sinkhorn_pr_model(embedding_method, dataset_id, layer, device_id):
     data = load_train_data(dataset_id, 'classification')
     for i, train, val in cross_validation_sampling(data):
         print(len(train), len(val))
@@ -71,7 +71,7 @@ def train_model_5(embedding_method, dataset_id, layer, device_id):
         save_model(embedding_method, dataset_id, layer, f'nn_sinkhorn_pr_model_{i}', model)
 
 
-def train_model_6(embedding_method, dataset_id, layer, device_id):
+def train_cond_lin_sinkhorn_pr_model(embedding_method, dataset_id, layer, device_id):
     data = load_train_data(dataset_id, 'classification')
     for i, train, val in cross_validation_sampling(data):
         print(len(train), len(val))
@@ -87,10 +87,9 @@ def train_model_6(embedding_method, dataset_id, layer, device_id):
         torch.cuda.empty_cache()
 
 
-def train_model_7(embedding_method, dataset_id, layer, device_id):
+def train_cond_nn_wavg_pr_model(embedding_method, dataset_id, layer, device_id):
     data = load_train_data(dataset_id, 'classification')
     for i, train, val in cross_validation_sampling(data):
-        if i < 2: continue
         print(len(train), len(val))
 
         print(f'Model {i + 1}')
@@ -105,11 +104,11 @@ def train_model_7(embedding_method, dataset_id, layer, device_id):
 
 
 PROCEDURES = [
-    train_model_1,
-    train_model_2,
-    train_model_3,
-    train_model_4,
-    train_model_5,
-    train_model_6,
-    train_model_7
+    train_nn_rouge_reg_model,
+    train_nn_wavg_pr_model,
+    train_lin_sinkhorn_reg_model,
+    train_lin_sinkhorn_pr_model,
+    train_nn_sinkhorn_pr_model,
+    train_cond_lin_sinkhorn_pr_model,
+    train_cond_nn_wavg_pr_model
 ]
