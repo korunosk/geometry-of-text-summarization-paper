@@ -128,17 +128,20 @@ class CondLinSinkhornPRModel(nn.Module):
         self.model = AvgModel(self.config['D'])
         self.sinkhorn = SamplesLoss(loss='sinkhorn', p=self.config['p'], blur=self.config['blur'], scaling=self.config['scaling'])
         self.sigm = nn.Sigmoid()
+
+    def generate_transformation(self, d, h):
+        return self.model(d, h)
     
     def transform(self, x, M):
         return torch.bmm(x, M)
 
     def predict(self, d, si, h, hi, M=None):
         if M is None:
-            M = self.model(d, h)
+            M = self.generate_transformation(d, h)
         return self.sinkhorn(h, self.transform(d, M), hi, self.transform(si, M))
 
     def forward(self, d, si, sj, h, hi, hj):
-        M = self.model(d, h)
+        M = self.generate_transformation(d, h)
         dist1 = self.predict(d, si, h, hi, M)
         dist2 = self.predict(d, sj, h, hj, M)
         return self.sigm(self.config['scaling_factor'] * (dist2 - dist1))
