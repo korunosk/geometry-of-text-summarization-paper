@@ -47,14 +47,24 @@ class ModelContainer():
                     load_model(embedding_method, dataset_id, layer, f'{model_id}_{i}', Model, config).to(self.device)
                 )
     
+    def num_models(self):
+        return len(self.models)
+    
+    def get_model(self, i):
+        return self.models[i]
+    
+    def model_predict(self, i, d, si, a, ai) -> list:
+        return self.get_model(i).predict(d, si, a, ai).cpu().tolist()
+    
     def predict(self, d, si, a, ai):
-        n = len(self.models)
-        predictions = self.models[0].predict(d, si, a, ai).cpu().tolist()
+        predictions = self.model_predict(0, d, si, a, ai)
         
-        for i in range(1, n):
-            predictions = list(map(add, self.models[i].predict(d, si, a, ai).cpu().tolist(), predictions))
+        for i in range(1, self.num_models()):
+            # sum predicitons with previous ones
+            predictions = list(map(add, self.model_predict(i, d, si, a, ai), predictions))
 
-        return list(map(lambda x: x / n, predictions))
+        # average them
+        return list(map(lambda x: x / self.num_models(), predictions)) 
 
 
 class TransformExperimentExecutor():
