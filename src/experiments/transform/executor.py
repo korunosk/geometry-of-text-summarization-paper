@@ -84,7 +84,8 @@ class TransformExperimentExecutor():
             ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_reg_model', LinSinkhornRegModel, self.config_models['LinSinkhornRegModel'], self.cv, device_id),
             ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'lin_sinkhorn_pr_model', LinSinkhornPRModel, self.config_models['LinSinkhornPRModel'], self.cv, device_id),
             ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'nn_sinkhorn_pr_model', NNSinkhornPRModel, self.config_models['NNSinkhornPRModel'], self.cv, device_id),
-            ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'cond_lin_sinkhorn_pr_model', CondLinSinkhornPRModel, self.config_models['CondLinSinkhornPRModel'], self.cv, device_id)
+            ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'cond_lin_sinkhorn_pr_model', CondLinSinkhornPRModel, self.config_models['CondLinSinkhornPRModel'], self.cv, device_id),
+            ModelContainer(self.embedding_method, self.dataset_id, self.layer, 'cond_nn_wavg_pr_model', CondNNWAvgPRModel, self.config_models['CondNNWAvgPRModel'], self.cv, device_id)
         ]
 
         self.experiments = [{
@@ -111,6 +112,10 @@ class TransformExperimentExecutor():
                 'label': 'CondLinSinkhornPRModel',
                 'transformer': self.transformers['CondLinSinkhornPRModel'], 
                 'procedure': lambda dataset: self.experiment(self.models[5], dataset)
+            }, {
+                'label': 'CondNNWAvgPRModel',
+                'transformer': self.transformers['CondNNWAvgPRModel'], 
+                'procedure': lambda dataset: self.experiment(self.models[0], dataset)
             }]
     
     def load_and_extract(self, transformer):
