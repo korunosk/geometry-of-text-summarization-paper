@@ -16,8 +16,8 @@ def make_config_transformers(embedding_method, dataset_id, exec):
         },
         # GloVe
         EMBEDDING_METHODS[1]: {
-            'PADDING_DOCUMENTS': None,
-            'PADDING_SUMMARY': None
+            'PADDING_DOCUMENTS': 1200 if dataset_id == 2 else 8850,
+            'PADDING_SUMMARY': 110 if dataset_id == 2 else 130
         },
         # fasttext
         EMBEDDING_METHODS[2]: {
