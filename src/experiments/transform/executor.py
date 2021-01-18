@@ -36,7 +36,7 @@ class ModelContainer():
         self.cv = cv
         self.models = []
         self.device = DEVICES[device_id]
-        
+
         if not cv:
             self.models.append(
                 load_model(embedding_method, dataset_id, layer, model_id, Model, config).to(self.device)
@@ -46,25 +46,25 @@ class ModelContainer():
                 self.models.append(
                     load_model(embedding_method, dataset_id, layer, f'{model_id}_{i}', Model, config).to(self.device)
                 )
-    
+
     def num_models(self):
         return len(self.models)
-    
+
     def get_model(self, i):
         return self.models[i]
-    
+
     def model_predict(self, i, d, si, a, ai) -> list:
         return self.get_model(i).predict(d, si, a, ai).cpu().tolist()
-    
+
     def predict(self, d, si, a, ai):
         predictions = self.model_predict(0, d, si, a, ai)
-        
+
         for i in range(1, self.num_models()):
             # sum predicitons with previous ones
             predictions = list(map(add, self.model_predict(i, d, si, a, ai), predictions))
 
         # average them
-        return list(map(lambda x: x / self.num_models(), predictions)) 
+        return list(map(lambda x: x / self.num_models(), predictions))
 
 
 class TransformExperimentExecutor():
@@ -90,34 +90,34 @@ class TransformExperimentExecutor():
 
         self.experiments = [{
                 'label': 'NNRougeRegModel',
-                'transformer': self.transformers['NNRougeRegModel'], 
+                'transformer': self.transformers['NNRougeRegModel'],
                 'procedure': lambda dataset: self.experiment(self.models[0], dataset)
             }, {
                 'label': 'NNWAvgPRModel',
-                'transformer': self.transformers['NNWAvgPRModel'], 
+                'transformer': self.transformers['NNWAvgPRModel'],
                 'procedure': lambda dataset: self.experiment(self.models[1], dataset)
             }, {
                 'label': 'LinSinkhornRegModel',
-                'transformer': self.transformers['LinSinkhornRegModel'], 
+                'transformer': self.transformers['LinSinkhornRegModel'],
                 'procedure': lambda dataset: self.experiment(self.models[2], dataset)
             }, {
                 'label': 'LinSinkhornPRModel',
-                'transformer': self.transformers['LinSinkhornPRModel'], 
+                'transformer': self.transformers['LinSinkhornPRModel'],
                 'procedure': lambda dataset: self.experiment(self.models[3], dataset)
             }, {
                 'label': 'NNSinkhornPRModel',
-                'transformer': self.transformers['NNSinkhornPRModel'], 
+                'transformer': self.transformers['NNSinkhornPRModel'],
                 'procedure': lambda dataset: self.experiment(self.models[4], dataset)
             }, {
                 'label': 'CondLinSinkhornPRModel',
-                'transformer': self.transformers['CondLinSinkhornPRModel'], 
+                'transformer': self.transformers['CondLinSinkhornPRModel'],
                 'procedure': lambda dataset: self.experiment(self.models[5], dataset)
             }, {
                 'label': 'CondNNWAvgPRModel',
-                'transformer': self.transformers['CondNNWAvgPRModel'], 
-                'procedure': lambda dataset: self.experiment(self.models[0], dataset)
+                'transformer': self.transformers['CondNNWAvgPRModel'],
+                'procedure': lambda dataset: self.experiment(self.models[6], dataset)
             }]
-    
+
     def load_and_extract(self, transformer):
         dataset = defaultdict(defaultdict)
         for topic_id in TOPIC_IDS[self.dataset_id]:
@@ -130,17 +130,29 @@ class TransformExperimentExecutor():
                     transformer['transform_summary'](summary_embs[idx[0]:idx[1]])
             dataset[topic_id]['pyr_scores'] = pyr_scores
         return dataset
-    
+
     def experiment(self, model, data):
         si = torch.stack(list(map(itemgetter('embs'), data['summaries'].values())))
         ai = torch.stack(list(map(itemgetter('aux'), data['summaries'].values())))
         d = data['documents']['embs'].unsqueeze(0).repeat(si.shape[0], 1, 1)
         a = data['documents']['aux'].repeat(ai.shape[0], 1)
         y = data['pyr_scores']
-        y_hat = model.predict(d.to(self.device),
-                              si.to(self.device),
-                              a.to(self.device),
-                              ai.to(self.device))
+        print(si.shape, ai.shape, d.shape, a.shape)
+        y_hat = []
+        n = si.shape[0]
+        s = n / 10
+        x = np.arange(0, n + s, s).astype(int)
+        for i, (f, t) in enumerate(zip(x[:-1], x[1:])):
+            print(i, end=', ')
+            y_hat.extend(
+                model.predict(
+                    d[f:t].to(self.device),
+                    si[f:t].to(self.device),
+                    a[f:t].to(self.device),
+                    ai[f:t].to(self.device)
+                )
+            )
+        print()
         return kendalltau(y, y_hat)[0]
 
     def __execute_experiment(self, transformer, procedure):
@@ -179,19 +191,19 @@ class TransformExperimentExecutor():
             label = experiment['label']
             transformer = experiment['transformer']
             procedure = experiment['procedure']
-            
+
             print('Executing "{}"\n'.format(label))
-            
+
             start = time.time()
             values = self.__execute_experiment(transformer, procedure)
             end = time.time()
-            
+
             print('   *** Elapsed: {:}\n'.format(format_time(end - start)))
-            
+
             result += '{:30} {:.2f}\n'.format(label, np.mean(values))
-            
+
             self.experiments[i]['values'] = values
-        
+
         print('\n=== Results ===\n')
         print(result)
 

@@ -16,7 +16,7 @@ if __name__ == '__main__':
                         help='Transformer\'s hidden state',
                         type=int,
                         choices=range(1, 13))
-    
+
     desc = ', '.join([ '{} - {}'.format(i + 1, device) for i, device in enumerate(DEVICES) ])
 
     parser.add_argument('-d',
@@ -24,14 +24,14 @@ if __name__ == '__main__':
                         help='Device ID: {}'.format(desc),
                         type=int,
                         choices=(range(1, len(DEVICES) + 1)))
-    
+
     parser.add_argument('-cv',
                         dest='crossval',
                         help='Cross-validate',
                         type=bool,
                         nargs='?',
                         const=True)
-    
+
     args = parser.parse_args()
 
     if args.layer == None:
@@ -45,12 +45,26 @@ if __name__ == '__main__':
     cv = args.crossval
 
     models = [
+        TransformExperimentExecutor(EMBEDDING_METHODS[0], DATASET_IDS[0],  None, cv, device_id),
+        TransformExperimentExecutor(EMBEDDING_METHODS[0], DATASET_IDS[1],  None, cv, device_id),
+        TransformExperimentExecutor(EMBEDDING_METHODS[0], DATASET_IDS[2],  None, cv, device_id),
+
+        TransformExperimentExecutor(EMBEDDING_METHODS[1], DATASET_IDS[0],  None, cv, device_id),
+        TransformExperimentExecutor(EMBEDDING_METHODS[1], DATASET_IDS[1],  None, cv, device_id),
+        TransformExperimentExecutor(EMBEDDING_METHODS[1], DATASET_IDS[2],  None, cv, device_id),
+
+        TransformExperimentExecutor(EMBEDDING_METHODS[2], DATASET_IDS[0],  None, cv, device_id),
+        TransformExperimentExecutor(EMBEDDING_METHODS[2], DATASET_IDS[1],  None, cv, device_id),
+        TransformExperimentExecutor(EMBEDDING_METHODS[2], DATASET_IDS[2],  None, cv, device_id),
+
         TransformExperimentExecutor(EMBEDDING_METHODS[3], DATASET_IDS[0], layer, cv, device_id),
         TransformExperimentExecutor(EMBEDDING_METHODS[3], DATASET_IDS[1], layer, cv, device_id),
         TransformExperimentExecutor(EMBEDDING_METHODS[3], DATASET_IDS[2], layer, cv, device_id),
+
         TransformExperimentExecutor(EMBEDDING_METHODS[4], DATASET_IDS[0],  None, cv, device_id),
         TransformExperimentExecutor(EMBEDDING_METHODS[4], DATASET_IDS[1],  None, cv, device_id),
         TransformExperimentExecutor(EMBEDDING_METHODS[4], DATASET_IDS[2],  None, cv, device_id),
+
         TransformExperimentExecutor(EMBEDDING_METHODS[5], DATASET_IDS[0], layer, cv, device_id),
         TransformExperimentExecutor(EMBEDDING_METHODS[5], DATASET_IDS[1], layer, cv, device_id),
         TransformExperimentExecutor(EMBEDDING_METHODS[5], DATASET_IDS[2], layer, cv, device_id),
