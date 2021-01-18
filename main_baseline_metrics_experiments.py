@@ -41,21 +41,26 @@ if __name__ == '__main__':
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[0], DATASET_IDS[0],  None, None, device_id),
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[0], DATASET_IDS[1],  None, None, device_id),
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[0], DATASET_IDS[2],  None, None, device_id),
+
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[1], DATASET_IDS[0],  None, None, device_id),
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[1], DATASET_IDS[1],  None, None, device_id),
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[1], DATASET_IDS[2],  None, None, device_id),
+
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[2], DATASET_IDS[0],  None, None, device_id),
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[2], DATASET_IDS[1],  None, None, device_id),
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[2], DATASET_IDS[2],  None, None, device_id),
+
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[3], DATASET_IDS[0], layer, None, device_id),
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[3], DATASET_IDS[1], layer, None, device_id),
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[3], DATASET_IDS[2], layer, None, device_id),
+
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[4], DATASET_IDS[0],  None, None, device_id),
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[4], DATASET_IDS[1],  None, None, device_id),
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[4], DATASET_IDS[2],  None, None, device_id),
+
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[5], DATASET_IDS[0], layer, None, device_id),
         BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[5], DATASET_IDS[1], layer, None, device_id),
-        BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[5], DATASET_IDS[2], layer, None, device_id)
+        BaselineMetricsExperimentExecutor(EMBEDDING_METHODS[5], DATASET_IDS[2], layer, None, device_id),
     ]
 
     ray.init(num_cpus=40)

@@ -17,7 +17,7 @@ def make_config_transformers(embedding_method, dataset_id, exec):
         # GloVe
         EMBEDDING_METHODS[1]: {
             'PADDING_DOCUMENTS': 1200 if dataset_id == 2 else 8850,
-            'PADDING_SUMMARY': 110 if dataset_id == 2 else 130
+            'PADDING_SUMMARY': 110 if dataset_id == 2 else 150
         },
         # fasttext
         EMBEDDING_METHODS[2]: {
@@ -27,7 +27,7 @@ def make_config_transformers(embedding_method, dataset_id, exec):
         # BERT_word
         EMBEDDING_METHODS[3]: {
             'PADDING_DOCUMENTS': 1200 if dataset_id == 2 else 8850,
-            'PADDING_SUMMARY': 110 if dataset_id == 2 else 130
+            'PADDING_SUMMARY': 110 if dataset_id == 2 else 150
         },
         # BERT_sent
         EMBEDDING_METHODS[4]: {
@@ -37,7 +37,7 @@ def make_config_transformers(embedding_method, dataset_id, exec):
         # BART_WORD
         EMBEDDING_METHODS[5]: {
             'PADDING_DOCUMENTS': 1200 if dataset_id == 2 else 8850,
-            'PADDING_SUMMARY': 110 if dataset_id == 2 else 130
+            'PADDING_SUMMARY': 110 if dataset_id == 2 else 150
         },
     }
 
