@@ -62,8 +62,7 @@ Currently, we are using [Transformers](https://github.com/huggingface/transforme
 
 ```bash
 # Activate environment
-export PATH=/opt/anaconda3/bin:$PATH
-source activate dlab
+export PATH=/opt/anaconda3/bin:$PATH && source activate dlab
 
 # Install dependencies
 pip install tensorflow==1.15
